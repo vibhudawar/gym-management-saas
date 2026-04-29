@@ -19,7 +19,7 @@ export async function createSupabaseServerClient() {
             );
           } catch {
             // setAll called from a Server Component — safe to ignore;
-            // middleware refreshes the session.
+            // proxy refreshes the session.
           }
         },
       },
