@@ -7,7 +7,7 @@ This is a multi-tenant gym management SaaS for the Indian market. Read `plan.md`
 
 ## Stack
 
-Next.js 15 App Router • TypeScript • Tailwind v4 • shadcn/ui (new-york) • Supabase (Postgres + Auth + Storage, region ap-south-1) • Drizzle ORM • Zod • react-hook-form • TanStack Query • Recharts • Sonner • lucide-react • pnpm.
+Next.js 15 App Router • TypeScript • Tailwind v4 • shadcn/ui (radix-nova) • Supabase (Postgres + Auth + Storage, region ap-south-1) • Drizzle ORM • Zod • react-hook-form • TanStack Query • Recharts • Sonner • lucide-react • pnpm.
 
 ## Folder Structure
 
@@ -83,3 +83,4 @@ See plan.md § 5. Do NOT introduce new top-level folders without explicit approv
 
 See plan.md § 8. A module is not done until RLS is verified with two tenants, all states (empty/loading/error) implemented, and a fresh-DB migration runs cleanly.
 ```
+
