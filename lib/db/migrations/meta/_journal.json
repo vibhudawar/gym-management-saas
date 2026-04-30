@@ -22,6 +22,20 @@
       "when": 1777571569227,
       "tag": "0002_silent_risque",
       "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "7",
+      "when": 1777579477714,
+      "tag": "0003_modern_wolfsbane",
+      "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "7",
+      "when": 1777584959502,
+      "tag": "0004_familiar_golden_guardian",
+      "breakpoints": true
     }
   ]
 }

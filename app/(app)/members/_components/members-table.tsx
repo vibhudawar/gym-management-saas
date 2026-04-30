@@ -32,6 +32,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { useDensity, type Density } from "@/components/shared/density-toggle";
+import { MemberMembershipCell } from "./member-membership-cell";
 import type { MemberListRow } from "@/server/queries/members/list-members";
 import { formatCalendarDate } from "@/lib/utils/dates";
 import { formatPhoneForDisplay } from "@/lib/utils/phone";
@@ -181,7 +182,12 @@ function Row({
           </TableCell>
         ) : null}
         <TableCell>
-          <span className="text-muted-foreground text-xs">—</span>
+          <MemberMembershipCell
+            status={row.latestMembershipStatus}
+            endDate={row.latestMembershipEndDate}
+            planName={row.latestPlanName}
+            dense={isDense}
+          />
         </TableCell>
         <TableCell onClick={(e) => e.stopPropagation()}>
           <DropdownMenu>

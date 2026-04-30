@@ -202,3 +202,143 @@ create policy "members_tenant_update" on public.members
   );
 
 -- No DELETE policy — soft delete via UPDATE only.
+
+-- ============================================================================
+-- Module 04 — Memberships, payments, invoice sequences
+-- ============================================================================
+
+alter table public.memberships         enable row level security;
+alter table public.membership_addons   enable row level security;
+alter table public.payments            enable row level security;
+alter table public.invoice_sequences   enable row level security;
+
+-- ----- memberships ----------------------------------------------------------
+drop policy if exists "memberships_tenant_select" on public.memberships;
+drop policy if exists "memberships_tenant_insert" on public.memberships;
+drop policy if exists "memberships_tenant_update" on public.memberships;
+
+create policy "memberships_tenant_select" on public.memberships
+  for select to authenticated
+  using (
+    gym_id = public.current_user_gym()
+    and (
+      public.current_user_role() = 'owner'
+      or branch_id = public.current_user_branch()
+    )
+  );
+
+create policy "memberships_tenant_insert" on public.memberships
+  for insert to authenticated
+  with check (
+    gym_id = public.current_user_gym()
+    and (
+      public.current_user_role() = 'owner'
+      or branch_id = public.current_user_branch()
+    )
+  );
+
+create policy "memberships_tenant_update" on public.memberships
+  for update to authenticated
+  using (
+    gym_id = public.current_user_gym()
+    and (
+      public.current_user_role() = 'owner'
+      or branch_id = public.current_user_branch()
+    )
+  )
+  with check (
+    gym_id = public.current_user_gym()
+    and (
+      public.current_user_role() = 'owner'
+      or branch_id = public.current_user_branch()
+    )
+  );
+
+-- ----- membership_addons ----------------------------------------------------
+-- Tenant isolation via parent membership; no branch scoping needed at this
+-- level because the parent already enforces it.
+drop policy if exists "membership_addons_tenant_select" on public.membership_addons;
+drop policy if exists "membership_addons_tenant_insert" on public.membership_addons;
+
+create policy "membership_addons_tenant_select" on public.membership_addons
+  for select to authenticated
+  using (
+    exists (
+      select 1 from public.memberships m
+      where m.id = membership_addons.membership_id
+        and m.gym_id = public.current_user_gym()
+        and (
+          public.current_user_role() = 'owner'
+          or m.branch_id = public.current_user_branch()
+        )
+    )
+  );
+
+create policy "membership_addons_tenant_insert" on public.membership_addons
+  for insert to authenticated
+  with check (
+    exists (
+      select 1 from public.memberships m
+      where m.id = membership_addons.membership_id
+        and m.gym_id = public.current_user_gym()
+        and (
+          public.current_user_role() = 'owner'
+          or m.branch_id = public.current_user_branch()
+        )
+    )
+  );
+
+-- ----- payments -------------------------------------------------------------
+drop policy if exists "payments_tenant_select" on public.payments;
+drop policy if exists "payments_tenant_insert" on public.payments;
+drop policy if exists "payments_tenant_update" on public.payments;
+
+create policy "payments_tenant_select" on public.payments
+  for select to authenticated
+  using (
+    gym_id = public.current_user_gym()
+    and (
+      public.current_user_role() = 'owner'
+      or branch_id = public.current_user_branch()
+    )
+  );
+
+create policy "payments_tenant_insert" on public.payments
+  for insert to authenticated
+  with check (
+    gym_id = public.current_user_gym()
+    and (
+      public.current_user_role() = 'owner'
+      or branch_id = public.current_user_branch()
+    )
+  );
+
+-- Owner / branch_manager only; receptionists cannot edit payments.
+create policy "payments_tenant_update" on public.payments
+  for update to authenticated
+  using (
+    gym_id = public.current_user_gym()
+    and public.current_user_role() in ('owner', 'branch_manager')
+  )
+  with check (
+    gym_id = public.current_user_gym()
+    and public.current_user_role() in ('owner', 'branch_manager')
+  );
+
+-- ----- invoice_sequences ----------------------------------------------------
+drop policy if exists "invoice_sequences_tenant_select" on public.invoice_sequences;
+drop policy if exists "invoice_sequences_tenant_insert" on public.invoice_sequences;
+drop policy if exists "invoice_sequences_tenant_update" on public.invoice_sequences;
+
+create policy "invoice_sequences_tenant_select" on public.invoice_sequences
+  for select to authenticated
+  using (gym_id = public.current_user_gym());
+
+create policy "invoice_sequences_tenant_insert" on public.invoice_sequences
+  for insert to authenticated
+  with check (gym_id = public.current_user_gym());
+
+create policy "invoice_sequences_tenant_update" on public.invoice_sequences
+  for update to authenticated
+  using (gym_id = public.current_user_gym())
+  with check (gym_id = public.current_user_gym());

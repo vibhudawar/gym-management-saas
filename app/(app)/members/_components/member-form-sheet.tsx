@@ -3,7 +3,7 @@
 import { useQuery } from "@tanstack/react-query";
 import { AlertCircle, ChevronDown, Loader2 } from "lucide-react";
 import Link from "next/link";
-import { useEffect, useState, useTransition } from "react";
+import { useCallback, useEffect, useMemo, useState, useTransition, type Dispatch, type SetStateAction } from "react";
 import { useForm, useWatch } from "react-hook-form";
 import { toast } from "sonner";
 import { z } from "zod";
@@ -34,8 +34,18 @@ import {
   SheetHeader,
   SheetTitle,
 } from "@/components/ui/sheet";
+import { Switch } from "@/components/ui/switch";
 import { Textarea } from "@/components/ui/textarea";
+import {
+  buildInitialEnrollmentState,
+  deriveEnrollment,
+  EnrollmentFields,
+  type EnrollmentFieldsConfig,
+  type EnrollmentFieldsState,
+} from "@/components/forms/enrollment-fields";
+import type { AddOn } from "@/lib/db/schema/add-ons";
 import type { Member } from "@/lib/db/schema/members";
+import type { Plan } from "@/lib/db/schema/plans";
 import { memberGenders } from "@/lib/db/schema/members";
 import { zodResolver } from "@/lib/forms/zod-resolver";
 import {
@@ -81,6 +91,11 @@ type MemberFormSheetProps = {
   defaultBranchId: string;
   member: Member | null;
   showAddAnother?: boolean;
+  /** When provided + creating a new member, expose the inline "Plan & payment" section. */
+  enrollmentOptions?: {
+    plans: Plan[];
+    addOns: AddOn[];
+  };
 };
 
 function todayIso(): string {
@@ -128,12 +143,50 @@ export function MemberFormSheet({
   defaultBranchId,
   member,
   showAddAnother = true,
+  enrollmentOptions,
 }: MemberFormSheetProps) {
   const isEdit = member !== null;
+  const canShowEnrollment = !isEdit && enrollmentOptions !== undefined;
   const [isPending, startTransition] = useTransition();
   const [addAnother, setAddAnother] = useState(false);
   const [emergencyOpen, setEmergencyOpen] = useState(false);
   const [extrasOpen, setExtrasOpen] = useState(false);
+  const [enrollNow, setEnrollNow] = useState(canShowEnrollment);
+
+  const enrollmentConfig = useMemo<EnrollmentFieldsConfig | null>(() => {
+    if (!enrollmentOptions) return null;
+    return {
+      plans: enrollmentOptions.plans,
+      addOns: enrollmentOptions.addOns,
+      isFirstEnrollment: true,
+    };
+  }, [enrollmentOptions]);
+
+  const [enrollState, setEnrollState] = useState<EnrollmentFieldsState | null>(
+    () => (enrollmentConfig ? buildInitialEnrollmentState(enrollmentConfig) : null),
+  );
+
+  // Stable setState passed down to EnrollmentFields. Without this wrapper an
+  // inline arrow function would change identity each render, the child's
+  // useEffect would re-fire, and we'd loop infinitely.
+  const setEnrollFieldsState = useCallback<
+    Dispatch<SetStateAction<EnrollmentFieldsState>>
+  >((updater) => {
+    setEnrollState((prev) => {
+      if (!prev) return prev;
+      return typeof updater === "function"
+        ? (updater as (s: EnrollmentFieldsState) => EnrollmentFieldsState)(prev)
+        : updater;
+    });
+  }, []);
+
+  useEffect(() => {
+    if (!open || !canShowEnrollment || !enrollmentConfig) return;
+    // Reset enrolment block when the sheet opens.
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    setEnrollNow(true);
+    setEnrollState(buildInitialEnrollmentState(enrollmentConfig));
+  }, [open, canShowEnrollment, enrollmentConfig]);
 
   const form = useForm<FormValues>({
     resolver: zodResolver(formSchema),
@@ -174,7 +227,7 @@ export function MemberFormSheet({
     form.clearErrors("root");
     if (duplicate) return;
 
-    const payload = {
+    const memberPayload = {
       branchId: values.branchId,
       name: values.name,
       phone: values.phone,
@@ -192,10 +245,46 @@ export function MemberFormSheet({
       notes: values.notes?.trim() ? values.notes.trim() : null,
     };
 
+    let enrollmentPayload: Record<string, unknown> | undefined;
+    if (canShowEnrollment && enrollNow && enrollState && enrollmentConfig) {
+      const derived = deriveEnrollment(enrollState, enrollmentConfig);
+      if (!derived.selectedPlan) {
+        form.setError("root", { message: "Pick a plan to enrol." });
+        return;
+      }
+      if (derived.discountTooLarge || derived.reasonMissing) {
+        form.setError("root", {
+          message: derived.reasonMissing
+            ? "Discount needs a reason."
+            : "Discount exceeds the total.",
+        });
+        return;
+      }
+      enrollmentPayload = {
+        planId: enrollState.planId,
+        appliedAddOnIds: [...enrollState.appliedAddOnIds],
+        discountPaise: enrollState.discountPaise,
+        discountReason:
+          enrollState.discountPaise > 0
+            ? enrollState.discountReason.trim()
+            : null,
+        finalAmountPaise: derived.finalAmount,
+        paymentMode: enrollState.paymentMode,
+        paymentDate: enrollState.paymentDate,
+        paymentNotes: enrollState.paymentNotes.trim()
+          ? enrollState.paymentNotes.trim()
+          : null,
+        startDate: derived.startDate,
+      };
+    }
+
     startTransition(async () => {
       const result = isEdit
-        ? await updateMember(member.id, payload)
-        : await createMember(payload);
+        ? await updateMember(member.id, memberPayload)
+        : await createMember({
+            member: memberPayload,
+            ...(enrollmentPayload ? { enrollment: enrollmentPayload } : {}),
+          });
 
       if (!result.ok) {
         if (result.code === "duplicate_phone") {
@@ -207,11 +296,18 @@ export function MemberFormSheet({
         }
         return;
       }
-      toast.success(isEdit ? "Member updated" : "Member added");
+      const successMessage =
+        result.ok && "invoiceNumber" in result && result.invoiceNumber
+          ? `Member added · invoice ${result.invoiceNumber}`
+          : isEdit
+            ? "Member updated"
+            : "Member added";
+      toast.success(successMessage);
 
       if (!isEdit && addAnother) {
         const keepBranch = values.branchId;
         const keepJoined = values.joinedDate;
+        const keepPaymentMode = enrollState?.paymentMode;
         form.reset({
           ...defaults(null, keepBranch),
           branchId: keepBranch,
@@ -219,6 +315,13 @@ export function MemberFormSheet({
         });
         setEmergencyOpen(false);
         setExtrasOpen(false);
+        if (canShowEnrollment && enrollmentConfig) {
+          setEnrollState({
+            ...buildInitialEnrollmentState(enrollmentConfig),
+            paymentMode: keepPaymentMode ?? "cash",
+            paymentDate: todayIso(),
+          });
+        }
         // focus name input on next tick
         requestAnimationFrame(() => form.setFocus("name"));
         return;
@@ -248,9 +351,9 @@ export function MemberFormSheet({
         <Form {...form}>
           <form
             onSubmit={form.handleSubmit(onSubmit)}
-            className="flex flex-1 flex-col"
+            className="flex min-h-0 flex-1 flex-col"
           >
-            <div className="flex-1 space-y-6 overflow-y-auto px-4 pt-2 pb-4">
+            <div className="min-h-0 flex-1 space-y-6 overflow-y-auto px-4 pt-2 pb-4">
               <Section title="Personal details">
                 <FormField
                   control={form.control}
@@ -425,6 +528,38 @@ export function MemberFormSheet({
                 />
               </Section>
 
+              {canShowEnrollment && enrollmentConfig && enrollState ? (
+                <section className="space-y-3">
+                  <div className="bg-muted/30 flex items-start justify-between gap-3 rounded-md border p-3">
+                    <div className="space-y-0.5">
+                      <label
+                        htmlFor="enrol-now-toggle"
+                        className="text-foreground text-sm font-semibold cursor-pointer"
+                      >
+                        Plan & payment
+                      </label>
+                      <p className="text-muted-foreground text-xs">
+                        {enrollNow
+                          ? "Enrol this member in a plan now."
+                          : "Skip if just registering — enrol later from the member detail page."}
+                      </p>
+                    </div>
+                    <Switch
+                      id="enrol-now-toggle"
+                      checked={enrollNow}
+                      onCheckedChange={(v) => setEnrollNow(v === true)}
+                    />
+                  </div>
+                  {enrollNow ? (
+                    <EnrollmentFields
+                      config={enrollmentConfig}
+                      state={enrollState}
+                      setState={setEnrollFieldsState}
+                    />
+                  ) : null}
+                </section>
+              ) : null}
+
               <Collapsible
                 title="Emergency contact"
                 open={emergencyOpen}
@@ -534,6 +669,8 @@ export function MemberFormSheet({
                       <Loader2 className="size-4 animate-spin" />
                     ) : isEdit ? (
                       "Save changes"
+                    ) : canShowEnrollment && enrollNow ? (
+                      "Add member & enrol"
                     ) : (
                       "Add member"
                     )}

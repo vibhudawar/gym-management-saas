@@ -177,9 +177,9 @@ export function PlanFormSheet({ open, onOpenChange, plan }: PlanFormSheetProps) 
         <Form {...form}>
           <form
             onSubmit={form.handleSubmit(onSubmit)}
-            className="flex flex-1 flex-col"
+            className="flex min-h-0 flex-1 flex-col"
           >
-            <div className="flex-1 space-y-5 overflow-y-auto px-4 pt-2 pb-4">
+            <div className="min-h-0 flex-1 space-y-5 overflow-y-auto px-4 pt-2 pb-4">
               <FormField
                 control={form.control}
                 name="name"

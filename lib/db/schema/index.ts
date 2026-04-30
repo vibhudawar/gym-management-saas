@@ -5,3 +5,7 @@ export * from "./audit-logs";
 export * from "./plans";
 export * from "./add-ons";
 export * from "./members";
+export * from "./memberships";
+export * from "./membership-addons";
+export * from "./payments";
+export * from "./invoice-sequences";

@@ -1,9 +1,10 @@
 "use server";
 
-import { and, eq, isNull } from "drizzle-orm";
+import { and, eq, isNull, sql } from "drizzle-orm";
 import { revalidatePath } from "next/cache";
 import { db } from "@/lib/db";
 import { members, type Member } from "@/lib/db/schema/members";
+import { memberships } from "@/lib/db/schema/memberships";
 import { recordAudit } from "@/lib/auth/audit";
 import { requireRole } from "@/lib/auth/get-session";
 
@@ -46,7 +47,29 @@ export async function softDeleteMember(
     };
   }
 
-  // Module 04 will add an active-membership guard here; nothing to block on yet.
+  // Block delete if there's an effectively-active or frozen membership.
+  const [activeMembership] = await db
+    .select({ id: memberships.id })
+    .from(memberships)
+    .where(
+      and(
+        eq(memberships.memberId, id),
+        isNull(memberships.deletedAt),
+        sql`(
+          (${memberships.status} = 'active' and ${memberships.endDate} >= current_date)
+          or ${memberships.status} = 'frozen'
+        )`,
+      ),
+    )
+    .limit(1);
+  if (activeMembership) {
+    return {
+      ok: false,
+      error:
+        "This member has an active or frozen membership. End or cancel the membership before deleting.",
+      code: "HAS_ACTIVE_MEMBERSHIP",
+    };
+  }
 
   const trimmedReason = typeof reason === "string" ? reason.trim() : "";
   const now = new Date();

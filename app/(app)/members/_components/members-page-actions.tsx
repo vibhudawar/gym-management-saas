@@ -6,6 +6,8 @@ import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { ExcelExportButton } from "@/components/shared/excel-export-button";
 import type { MemberListRow } from "@/server/queries/members/list-members";
+import type { AddOn } from "@/lib/db/schema/add-ons";
+import type { Plan } from "@/lib/db/schema/plans";
 import { formatPhoneForDisplay } from "@/lib/utils/phone";
 import { MemberFormSheet } from "./member-form-sheet";
 
@@ -17,6 +19,8 @@ type MembersPageActionsProps = {
   canEdit: boolean;
   exportRows: MemberListRow[];
   exportFilenameStem: string;
+  plans?: Plan[];
+  addOns?: AddOn[];
 };
 
 export function MembersPageActions({
@@ -25,6 +29,8 @@ export function MembersPageActions({
   canEdit,
   exportRows,
   exportFilenameStem,
+  plans,
+  addOns,
 }: MembersPageActionsProps) {
   const [open, setOpen] = useState(false);
 
@@ -65,6 +71,9 @@ export function MembersPageActions({
             branches={branches}
             defaultBranchId={defaultBranchId}
             member={null}
+            enrollmentOptions={
+              plans && addOns ? { plans, addOns } : undefined
+            }
           />
         </>
       ) : null}

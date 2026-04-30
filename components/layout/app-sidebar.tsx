@@ -1,7 +1,6 @@
 "use client";
 
 import {
-  CalendarDays,
   CreditCard,
   FileText,
   History,
@@ -39,7 +38,6 @@ type NavItem = {
 const NAV_ITEMS: ReadonlyArray<NavItem> = [
   { href: "/", label: "Today", icon: LayoutDashboard },
   { href: "/members", label: "Members", icon: Users },
-  { href: "/enrollments", label: "Enrollments", icon: CalendarDays },
   { href: "/plans", label: "Plans", icon: ListChecks },
   { href: "/payments", label: "Payments", icon: CreditCard },
   {

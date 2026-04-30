@@ -5,6 +5,8 @@ import { Plus, Search, Users } from "lucide-react";
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { EmptyState } from "@/components/shared/empty-state";
+import type { AddOn } from "@/lib/db/schema/add-ons";
+import type { Plan } from "@/lib/db/schema/plans";
 import type { MemberListRow } from "@/server/queries/members/list-members";
 import { MemberFormSheet } from "./member-form-sheet";
 import { MembersPagination } from "./members-pagination";
@@ -25,7 +27,9 @@ type MembersListClientProps = {
   canRestore: boolean;
   status: "active" | "deleted";
   hasFiltersApplied: boolean;
-  onClearFilters: string; // href to clear filters
+  onClearFilters: string;
+  plans?: Plan[];
+  addOns?: AddOn[];
 };
 
 export function MembersListClient({
@@ -42,6 +46,8 @@ export function MembersListClient({
   status,
   hasFiltersApplied,
   onClearFilters,
+  plans,
+  addOns,
 }: MembersListClientProps) {
   const [editing, setEditing] = useState<MemberListRow | null>(null);
   const [createOpen, setCreateOpen] = useState(false);
@@ -81,6 +87,9 @@ export function MembersListClient({
                 branches={branches}
                 defaultBranchId={defaultBranchId}
                 member={null}
+                enrollmentOptions={
+                  plans && addOns ? { plans, addOns } : undefined
+                }
               />
             </div>
           ) : undefined
