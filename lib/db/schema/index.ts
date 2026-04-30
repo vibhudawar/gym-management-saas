@@ -1,2 +1,4 @@
-// Schema barrel — populated as modules are added.
-export {};
+export * from "./gyms";
+export * from "./branches";
+export * from "./users";
+export * from "./audit-logs";

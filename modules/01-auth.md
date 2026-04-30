@@ -163,12 +163,16 @@ Apply this only on tables that have `branch_id` AND should be branch-scoped (mem
 ### `lib/auth/supabase-server.ts`
 SSR-safe Supabase client using `@supabase/ssr` with Next.js cookies. Returns a server client that respects RLS.
 
+> **Create a fresh client per request inside the function call.** Do NOT cache or export a module-level singleton — cookies and auth context are request-scoped, and a singleton will leak one user's session into another's request.
+
 ### `lib/auth/get-session.ts`
 ```ts
 export async function requireUser() { /* throws redirect to /login if no session */ }
 export async function getCurrentUser() { /* returns users row joined with auth */ }
 export async function requireRole(...roles: Role[]) { /* throws if mismatch */ }
 ```
+
+> **Use `supabase.auth.getClaims()` — not `getSession()` or `getUser()`.** `getClaims()` validates the JWT signature against the project's public keys on every call, which is the only safe pattern for server code. The user's id is at `claims.sub`, email at `claims.email`, etc. `getCurrentUser()` should call `getClaims()`, then look up the local `users` row by `auth_user_id = claims.sub`.
 
 ### `lib/auth/audit.ts`
 ```ts
@@ -349,6 +353,8 @@ scripts/test-rls.ts                       (manual RLS verifier)
 5. **Schema barrel imports.** `lib/db/schema/index.ts` must re-export every schema, or Drizzle queries can't resolve relations.
 6. **The `users` table is separate from `auth.users`.** Always join via `auth_user_id`. Don't try to extend `auth.users` directly — Supabase manages it.
 7. **Soft delete in queries.** Every query in this module and beyond must filter `deleted_at IS NULL` for `users`, `gyms`, `branches`. Build a Drizzle helper or use a view if it gets repetitive.
+8. **`getClaims()` only, in server code.** `getClaims()` cryptographically verifies the JWT against the project's public keys every call. `getSession()` returns whatever's in the cookie without verification (unsafe), and `getUser()` round-trips to the Auth server (slower and unnecessary). Read `sub`, `email`, `role` directly off the returned claims.
+9. **Never memoise the server Supabase client.** Always create a fresh client inside the function/request — cookies are request-scoped, and a shared instance will cross-contaminate sessions.
 
 ---
 

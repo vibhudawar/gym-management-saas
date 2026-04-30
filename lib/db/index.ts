@@ -1,6 +1,6 @@
 import { drizzle } from "drizzle-orm/postgres-js";
 import postgres from "postgres";
-import * as schema from "./schema";
+import * as schema from "@/lib/db/schema";
 
 // Pooled connection (port 6543, transaction mode).
 // `prepare: false` is REQUIRED — Supabase transaction pooler doesn't support prepared statements.

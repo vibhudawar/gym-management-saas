@@ -1,0 +1,98 @@
+-- ----------------------------------------------------------------------------
+-- RLS policies for Module 01 tables.
+-- Run AFTER _functions.sql.
+-- Idempotent: drops existing policies before recreating.
+-- ----------------------------------------------------------------------------
+
+alter table public.gyms        enable row level security;
+alter table public.branches    enable row level security;
+alter table public.users       enable row level security;
+alter table public.audit_logs  enable row level security;
+
+-- ----- gyms ------------------------------------------------------------------
+drop policy if exists "gyms_tenant_select" on public.gyms;
+drop policy if exists "gyms_tenant_update" on public.gyms;
+
+create policy "gyms_tenant_select" on public.gyms
+  for select to authenticated
+  using (id = public.current_user_gym());
+
+-- Only the owner can update gym-level settings.
+create policy "gyms_tenant_update" on public.gyms
+  for update to authenticated
+  using (id = public.current_user_gym() and public.current_user_role() = 'owner')
+  with check (id = public.current_user_gym() and public.current_user_role() = 'owner');
+
+-- No INSERT or DELETE policies — gyms are provisioned server-side via the
+-- service role and never hard-deleted.
+
+-- ----- branches --------------------------------------------------------------
+drop policy if exists "branches_tenant_select" on public.branches;
+drop policy if exists "branches_tenant_insert" on public.branches;
+drop policy if exists "branches_tenant_update" on public.branches;
+
+create policy "branches_tenant_select" on public.branches
+  for select to authenticated
+  using (gym_id = public.current_user_gym());
+
+create policy "branches_tenant_insert" on public.branches
+  for insert to authenticated
+  with check (
+    gym_id = public.current_user_gym()
+    and public.current_user_role() in ('owner', 'branch_manager')
+  );
+
+create policy "branches_tenant_update" on public.branches
+  for update to authenticated
+  using (gym_id = public.current_user_gym())
+  with check (
+    gym_id = public.current_user_gym()
+    and public.current_user_role() in ('owner', 'branch_manager')
+  );
+
+-- ----- users -----------------------------------------------------------------
+drop policy if exists "users_tenant_select" on public.users;
+drop policy if exists "users_tenant_insert" on public.users;
+drop policy if exists "users_tenant_update" on public.users;
+
+create policy "users_tenant_select" on public.users
+  for select to authenticated
+  using (gym_id = public.current_user_gym());
+
+-- Only owners can add staff. Staff creation also goes through the service-role
+-- script, but this policy lets in-app onboarding flows work later.
+create policy "users_tenant_insert" on public.users
+  for insert to authenticated
+  with check (
+    gym_id = public.current_user_gym()
+    and public.current_user_role() = 'owner'
+  );
+
+create policy "users_tenant_update" on public.users
+  for update to authenticated
+  using (gym_id = public.current_user_gym())
+  with check (
+    gym_id = public.current_user_gym()
+    and (
+      public.current_user_role() = 'owner'
+      or auth_user_id = auth.uid() -- a user can update their own row
+    )
+  );
+
+-- ----- audit_logs ------------------------------------------------------------
+drop policy if exists "audit_logs_tenant_select" on public.audit_logs;
+drop policy if exists "audit_logs_tenant_insert" on public.audit_logs;
+
+-- Receptionists must NOT see the audit log.
+create policy "audit_logs_tenant_select" on public.audit_logs
+  for select to authenticated
+  using (
+    gym_id = public.current_user_gym()
+    and public.current_user_role() in ('owner', 'branch_manager')
+  );
+
+create policy "audit_logs_tenant_insert" on public.audit_logs
+  for insert to authenticated
+  with check (gym_id = public.current_user_gym());
+
+-- No UPDATE / DELETE policy — audit log is append-only.
