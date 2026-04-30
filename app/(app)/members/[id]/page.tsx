@@ -34,17 +34,20 @@ export default async function MemberDetailPage({
   const owner = isOwner(session.user.role);
   const canEdit = isManagerOrOwner(session.user.role);
 
-  const member = await getMember(id);
-  if (!member) notFound();
+  // Fan everything out in one round-trip wave — getMember runs alongside the
+  // others instead of blocking them.
+  const [member, branches, plans, addOns, current, history, payments] =
+    await Promise.all([
+      getMember(id),
+      listActiveBranches(),
+      listPlans({ includeInactive: false }),
+      listAddOns({ includeInactive: false }),
+      getCurrentMembership(id),
+      getMembershipHistory(id),
+      getPaymentsByMember(id, 5),
+    ]);
 
-  const [branches, plans, addOns, current, history, payments] = await Promise.all([
-    listActiveBranches(),
-    listPlans({ includeInactive: false }),
-    listAddOns({ includeInactive: false }),
-    getCurrentMembership(member.id),
-    getMembershipHistory(member.id),
-    getPaymentsByMember(member.id, 5),
-  ]);
+  if (!member) notFound();
 
   const isDeleted = member.deletedAt !== null;
 
