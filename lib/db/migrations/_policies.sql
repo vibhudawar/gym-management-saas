@@ -96,3 +96,58 @@ create policy "audit_logs_tenant_insert" on public.audit_logs
   with check (gym_id = public.current_user_gym());
 
 -- No UPDATE / DELETE policy — audit log is append-only.
+
+-- ============================================================================
+-- Module 02 — Plans & Add-ons
+-- ============================================================================
+
+alter table public.plans   enable row level security;
+alter table public.add_ons enable row level security;
+
+-- ----- plans -----------------------------------------------------------------
+drop policy if exists "plans_tenant_select" on public.plans;
+drop policy if exists "plans_tenant_insert" on public.plans;
+drop policy if exists "plans_tenant_update" on public.plans;
+
+create policy "plans_tenant_select" on public.plans
+  for select to authenticated
+  using (gym_id = public.current_user_gym());
+
+create policy "plans_tenant_insert" on public.plans
+  for insert to authenticated
+  with check (
+    gym_id = public.current_user_gym()
+    and public.current_user_role() in ('owner', 'branch_manager')
+  );
+
+create policy "plans_tenant_update" on public.plans
+  for update to authenticated
+  using (gym_id = public.current_user_gym())
+  with check (
+    gym_id = public.current_user_gym()
+    and public.current_user_role() in ('owner', 'branch_manager')
+  );
+
+-- ----- add_ons ---------------------------------------------------------------
+drop policy if exists "add_ons_tenant_select" on public.add_ons;
+drop policy if exists "add_ons_tenant_insert" on public.add_ons;
+drop policy if exists "add_ons_tenant_update" on public.add_ons;
+
+create policy "add_ons_tenant_select" on public.add_ons
+  for select to authenticated
+  using (gym_id = public.current_user_gym());
+
+create policy "add_ons_tenant_insert" on public.add_ons
+  for insert to authenticated
+  with check (
+    gym_id = public.current_user_gym()
+    and public.current_user_role() in ('owner', 'branch_manager')
+  );
+
+create policy "add_ons_tenant_update" on public.add_ons
+  for update to authenticated
+  using (gym_id = public.current_user_gym())
+  with check (
+    gym_id = public.current_user_gym()
+    and public.current_user_role() in ('owner', 'branch_manager')
+  );
