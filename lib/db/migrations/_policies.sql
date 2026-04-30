@@ -151,3 +151,54 @@ create policy "add_ons_tenant_update" on public.add_ons
     gym_id = public.current_user_gym()
     and public.current_user_role() in ('owner', 'branch_manager')
   );
+
+-- ============================================================================
+-- Module 03 — Members (tenant isolation + branch scoping)
+-- ============================================================================
+
+alter table public.members enable row level security;
+
+drop policy if exists "members_tenant_select" on public.members;
+drop policy if exists "members_tenant_insert" on public.members;
+drop policy if exists "members_tenant_update" on public.members;
+
+-- Owner sees all branches in the gym; branch_manager / receptionist see
+-- only their own branch.
+create policy "members_tenant_select" on public.members
+  for select to authenticated
+  using (
+    gym_id = public.current_user_gym()
+    and (
+      public.current_user_role() = 'owner'
+      or branch_id = public.current_user_branch()
+    )
+  );
+
+create policy "members_tenant_insert" on public.members
+  for insert to authenticated
+  with check (
+    gym_id = public.current_user_gym()
+    and (
+      public.current_user_role() = 'owner'
+      or branch_id = public.current_user_branch()
+    )
+  );
+
+create policy "members_tenant_update" on public.members
+  for update to authenticated
+  using (
+    gym_id = public.current_user_gym()
+    and (
+      public.current_user_role() = 'owner'
+      or branch_id = public.current_user_branch()
+    )
+  )
+  with check (
+    gym_id = public.current_user_gym()
+    and (
+      public.current_user_role() = 'owner'
+      or branch_id = public.current_user_branch()
+    )
+  );
+
+-- No DELETE policy — soft delete via UPDATE only.

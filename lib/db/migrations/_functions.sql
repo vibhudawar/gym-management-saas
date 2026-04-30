@@ -42,3 +42,12 @@ revoke all on function public.current_user_branch() from public;
 grant execute on function public.current_user_gym()    to authenticated, anon, service_role;
 grant execute on function public.current_user_role()   to authenticated, anon, service_role;
 grant execute on function public.current_user_branch() to authenticated, anon, service_role;
+
+-- Generic updated_at trigger function. Per-table triggers wired in _triggers.sql.
+create or replace function public.set_updated_at() returns trigger
+language plpgsql as $$
+begin
+  new.updated_at = now();
+  return new;
+end;
+$$;

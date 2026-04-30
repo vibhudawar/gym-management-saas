@@ -1,0 +1,4 @@
+name,phone,email,gender,dob,address,emergency_contact_name,emergency_contact_phone,joined_date,branch,notes
+Rohit Sharma,9876543210,rohit@example.com,male,1995-08-12,"123 MG Road, Bengaluru",Priya Sharma,9876543211,2024-03-12,Main Branch,3-month plan paid
+Anita Verma,+919812345678,,female,1990-02-25,,,,2024-04-01,Main Branch,
+Amit Kumar,98123 45679,amit@example.com,M,12/05/1992,,,,01/04/2024,Main Branch,Walk-in

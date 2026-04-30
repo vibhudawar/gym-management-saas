@@ -5,6 +5,8 @@ import postgres from "postgres";
 
 const FILES = [
   "lib/db/migrations/_functions.sql",
+  "lib/db/migrations/_triggers.sql",
+  "lib/db/migrations/_indexes.sql",
   "lib/db/migrations/_policies.sql",
 ];
 

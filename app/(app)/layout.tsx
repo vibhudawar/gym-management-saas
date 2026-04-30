@@ -1,11 +1,9 @@
-import { and, eq, isNull } from "drizzle-orm";
 import { AppSidebar } from "@/components/layout/app-sidebar";
 import { TopBar } from "@/components/layout/top-bar";
 import { SidebarInset, SidebarProvider } from "@/components/ui/sidebar";
 import { requireUser } from "@/lib/auth/get-session";
 import { ROLE_LABEL } from "@/lib/auth/roles";
-import { db } from "@/lib/db";
-import { branches } from "@/lib/db/schema/branches";
+import { listActiveBranches } from "@/server/queries/branches/list-active-branches";
 
 export default async function AppLayout({
   children,
@@ -13,18 +11,7 @@ export default async function AppLayout({
   children: React.ReactNode;
 }) {
   const session = await requireUser();
-
-  const branchRows = await db
-    .select({ id: branches.id, name: branches.name })
-    .from(branches)
-    .where(
-      and(
-        eq(branches.gymId, session.gym.id),
-        eq(branches.isActive, true),
-        isNull(branches.deletedAt),
-      ),
-    )
-    .orderBy(branches.name);
+  const branchRows = await listActiveBranches();
 
   return (
     <SidebarProvider>

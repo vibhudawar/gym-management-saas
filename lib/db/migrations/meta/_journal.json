@@ -15,6 +15,13 @@
       "when": 1777560275990,
       "tag": "0001_whole_felicia_hardy",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1777571569227,
+      "tag": "0002_silent_risque",
+      "breakpoints": true
     }
   ]
 }
