@@ -1,6 +1,7 @@
 import { and, eq, inArray, isNull, sql } from "drizzle-orm";
 import { db } from "@/lib/db";
 import { addOns } from "@/lib/db/schema/add-ons";
+import { freezes } from "@/lib/db/schema/freezes";
 import { membershipAddons } from "@/lib/db/schema/membership-addons";
 import {
   memberships,
@@ -218,7 +219,22 @@ export async function correctMembershipService(
     }
 
     // end_date recomputed from start_date + new plan's duration. original_end_date NEVER changes.
-    const newEndDate = addDays(before.startDate, planRow.durationDays);
+    // Existing freezes have already been applied to the OLD end_date — we
+    // re-apply their day extensions on top of the new plan duration so the
+    // member doesn't lose the days they've already been promised.
+    const [{ frozen_days: frozenDays }] = (await tx.execute<{
+      frozen_days: number;
+    }>(sql`
+      select coalesce(sum(${freezes.daysAdded}), 0)::int as frozen_days
+      from ${freezes}
+      where ${freezes.membershipId} = ${before.id}
+        and ${freezes.deletedAt} is null
+        and ${freezes.status} <> 'cancelled_early'
+    `)) as unknown as Array<{ frozen_days: number }>;
+    const newEndDate = addDays(
+      before.startDate,
+      planRow.durationDays + Number(frozenDays ?? 0),
+    );
 
     const now = new Date();
     const [after] = await tx

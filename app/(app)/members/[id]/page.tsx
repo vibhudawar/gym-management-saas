@@ -8,10 +8,13 @@ import { listActiveBranches } from "@/server/queries/branches/list-active-branch
 import { listAddOns } from "@/server/queries/add-ons/list-add-ons";
 import { listPlans } from "@/server/queries/plans/list-plans";
 import { getMember } from "@/server/queries/members/get-member";
+import { getCurrentFreeze } from "@/server/queries/freezes/get-current-freeze";
+import { getFreezesByMembership } from "@/server/queries/freezes/get-freezes-by-membership";
 import { getCurrentMembership } from "@/server/queries/memberships/get-current-membership";
 import { getMembershipHistory } from "@/server/queries/memberships/get-membership-history";
 import { getPaymentsByMember } from "@/server/queries/payments/get-payments-by-member";
 import { CurrentMembershipCard } from "./_components/current-membership-card";
+import { FreezeHistoryCard } from "./_components/freeze-history-card";
 import { MemberActivityCard } from "./_components/member-activity-card";
 import { MemberDetailHeader } from "./_components/member-detail-header";
 import { MembershipHistoryCard } from "./_components/membership-history-card";
@@ -49,6 +52,15 @@ export default async function MemberDetailPage({
 
   if (!member) notFound();
 
+  // Freeze data depends on the current membership id; do these in parallel
+  // once we have it. Skipped entirely when there's no membership.
+  const [currentFreeze, freezeHistory] = current
+    ? await Promise.all([
+        getCurrentFreeze(current.id),
+        getFreezesByMembership(current.id),
+      ])
+    : [null, []];
+
   const isDeleted = member.deletedAt !== null;
 
   return (
@@ -71,8 +83,11 @@ export default async function MemberDetailPage({
         <div className="space-y-4 lg:col-span-2">
           <CurrentMembershipCard
             memberId={member.id}
+            memberName={member.name}
             branchId={member.branchId}
             current={current}
+            currentFreeze={currentFreeze}
+            pastFreezeCount={freezeHistory.length}
             plans={plans}
             addOns={addOns}
             canEnrol={canEdit && !isDeleted}
@@ -109,6 +124,7 @@ export default async function MemberDetailPage({
             canManagePayments={owner && !isDeleted}
             current={current}
           />
+          <FreezeHistoryCard rows={freezeHistory} />
           <Suspense fallback={<Skeleton className="h-32 rounded-xl" />}>
             <MemberActivityCard memberId={member.id} />
           </Suspense>

@@ -48,14 +48,21 @@ const EXPIRING_WINDOW_DAYS = 14;
 
 const latestStatusSql = sql<MembershipStatus | null>`(
   select case
-    when status = 'cancelled' then 'cancelled'
-    when status = 'frozen' then 'frozen'
-    when end_date < current_date then 'expired'
+    when m.status = 'cancelled' then 'cancelled'
+    when m.end_date < ((now() at time zone 'Asia/Kolkata')::date) then 'expired'
+    when exists (
+      select 1 from freezes f
+      where f.membership_id = m.id
+        and f.deleted_at is null
+        and f.status <> 'cancelled_early'
+        and f.freeze_start_date <= ((now() at time zone 'Asia/Kolkata')::date)
+        and f.freeze_end_date >= ((now() at time zone 'Asia/Kolkata')::date)
+    ) then 'frozen'
     else 'active'
   end
-  from memberships
-  where member_id = ${members.id} and deleted_at is null
-  order by start_date desc, created_at desc
+  from memberships m
+  where m.member_id = ${members.id} and m.deleted_at is null
+  order by m.start_date desc, m.created_at desc
   limit 1
 )`;
 
@@ -122,7 +129,7 @@ export async function listMembers(
     case "expiring":
       conditions.push(sql`${latestStatusSql} = 'active'`);
       conditions.push(
-        sql`${latestEndDateSql}::date - current_date <= ${EXPIRING_WINDOW_DAYS}`,
+        sql`${latestEndDateSql}::date - ((now() at time zone 'Asia/Kolkata')::date) <= ${EXPIRING_WINDOW_DAYS}`,
       );
       break;
     case "frozen":
@@ -144,7 +151,7 @@ export async function listMembers(
   let order;
   if (sortBy === "membership") {
     const priority = sql`case
-      when ${latestStatusSql} = 'active' and ${latestEndDateSql}::date - current_date <= ${EXPIRING_WINDOW_DAYS} then 1
+      when ${latestStatusSql} = 'active' and ${latestEndDateSql}::date - ((now() at time zone 'Asia/Kolkata')::date) <= ${EXPIRING_WINDOW_DAYS} then 1
       when ${latestStatusSql} = 'active' then 2
       when ${latestStatusSql} = 'expired' then 3
       when ${latestStatusSql} = 'frozen' then 4

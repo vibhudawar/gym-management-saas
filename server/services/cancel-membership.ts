@@ -7,6 +7,7 @@ import {
   recordRefundService,
   type RefundResult,
 } from "./refund";
+import { endActiveFreezesForCancellation } from "./unfreeze";
 import type { PaymentMode } from "@/lib/db/schema/payments";
 
 export type CancelMembershipInput = {
@@ -107,6 +108,21 @@ export async function cancelMembershipService(
         message: "Effective date cannot be before the membership started.",
       };
     }
+
+    // End any open freezes before flipping to cancelled. The freezes' status
+    // becomes 'cancelled_early' with an auto-synthesized reason; we don't
+    // restore extension days here since the membership end_date is being
+    // overwritten anyway.
+    await endActiveFreezesForCancellation(
+      tx as unknown as typeof db,
+      {
+        gymId: session.gym.id,
+        membershipId: before.id,
+        userId: session.user.id,
+        cancellationReason: reason,
+        cancellationDate: input.effectiveDate,
+      },
+    );
 
     const [after] = await tx
       .update(memberships)

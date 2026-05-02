@@ -156,25 +156,42 @@ export async function getTodaySnapshot(): Promise<TodaySnapshot> {
         count(*) filter (
           where end_date - ${istToday} between 0 and 3
         )::int as window_3d
-      from ${memberships}
-      where gym_id = ${session.gym.id}
-        and deleted_at is null
-        and status = 'active'
-        and end_date >= ${istToday}
-        and branch_id ${branchFilter}
+      from ${memberships} m
+      where m.gym_id = ${session.gym.id}
+        and m.deleted_at is null
+        and m.status = 'active'
+        and m.end_date >= ${istToday}
+        and m.branch_id ${branchFilter}
+        and not exists (
+          select 1 from freezes f
+          where f.membership_id = m.id
+            and f.deleted_at is null
+            and f.status <> 'cancelled_early'
+            and f.freeze_start_date <= ${istToday}
+            and f.freeze_end_date >= ${istToday}
+        )
     `),
 
-    // Frozen now + resuming in next 7 days. The "resuming" half is a v1.x
-    // placeholder (freeze module isn't built yet — there's no freeze_until
-    // column), so it returns zero. Schema is shaped for the eventual feature.
+    // Frozen now + resuming in next 7 days. We read from the `freezes` table
+    // directly — `memberships.status` never holds 'frozen' (Module 06 keeps
+    // freeze state in its own table to avoid a daily transition cron).
     db.execute<{
       frozen_now: number;
+      resuming_in_7d: number;
     }>(sql`
-      select count(*)::int as frozen_now
-      from ${memberships}
+      select
+        count(*) filter (
+          where freeze_start_date <= ${istToday}
+            and freeze_end_date >= ${istToday}
+        )::int as frozen_now,
+        count(*) filter (
+          where freeze_start_date <= ${istToday}
+            and freeze_end_date between ${istToday} and ${istToday} + 7
+        )::int as resuming_in_7d
+      from freezes
       where gym_id = ${session.gym.id}
         and deleted_at is null
-        and status = 'frozen'
+        and status <> 'cancelled_early'
         and branch_id ${branchFilter}
     `),
 
@@ -209,6 +226,14 @@ export async function getTodaySnapshot(): Promise<TodaySnapshot> {
           and ${memberships.endDate} between ${istToday}
             and ${istToday} + ${EXPIRING_WINDOW_DAYS}::int
           and ${memberships.branchId} ${branchFilter}
+          and not exists (
+            select 1 from freezes f
+            where f.membership_id = ${memberships.id}
+              and f.deleted_at is null
+              and f.status <> 'cancelled_early'
+              and f.freeze_start_date <= ${istToday}
+              and f.freeze_end_date >= ${istToday}
+          )
       ),
       total as (select count(*)::int as cnt from eligible),
       ranked as (
@@ -281,6 +306,14 @@ export async function getTodaySnapshot(): Promise<TodaySnapshot> {
           and ${memberships.endDate} < ${istToday}
           and ${memberships.endDate} >= ${istToday} - ${RECENTLY_EXPIRED_WINDOW_DAYS}::int
           and ${memberships.branchId} ${branchFilter}
+          and not exists (
+            select 1 from freezes f
+            where f.membership_id = ${memberships.id}
+              and f.deleted_at is null
+              and f.status <> 'cancelled_early'
+              and f.freeze_start_date <= ${istToday}
+              and f.freeze_end_date >= ${istToday}
+          )
       ),
       total as (select count(*)::int as cnt from eligible),
       ranked as (
@@ -415,9 +448,10 @@ export async function getTodaySnapshot(): Promise<TodaySnapshot> {
     window_3d: number;
   }>)[0] ?? { window_14d: 0, window_7d: 0, window_3d: 0 };
 
-  const frozen = (frozenMetrics as unknown as Array<{ frozen_now: number }>)[0] ?? {
-    frozen_now: 0,
-  };
+  const frozen = (frozenMetrics as unknown as Array<{
+    frozen_now: number;
+    resuming_in_7d: number;
+  }>)[0] ?? { frozen_now: 0, resuming_in_7d: 0 };
 
   const shapeActionRows = (
     rows: Array<{
@@ -508,7 +542,7 @@ export async function getTodaySnapshot(): Promise<TodaySnapshot> {
       expiringIn7d: Number(expiring.window_7d) || 0,
       expiringIn3d: Number(expiring.window_3d) || 0,
       frozenNow: Number(frozen.frozen_now) || 0,
-      resumingIn7d: 0,
+      resumingIn7d: Number(frozen.resuming_in_7d) || 0,
     },
     expiringSoon: expiringShaped.rows,
     expiringSoonTotal: expiringShaped.total,

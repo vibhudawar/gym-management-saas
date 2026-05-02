@@ -382,3 +382,45 @@ create policy "reminders_tenant_insert" on public.reminders
 
 -- No UPDATE / DELETE policy — reminders are append-only (corrections insert a
 -- new row; you can't unsend a message).
+
+-- ----- freezes --------------------------------------------------------------
+alter table public.freezes enable row level security;
+
+drop policy if exists "freezes_tenant_select" on public.freezes;
+drop policy if exists "freezes_tenant_insert" on public.freezes;
+drop policy if exists "freezes_tenant_update" on public.freezes;
+
+-- Owner sees all branches; branch_manager and receptionist see only their
+-- branch. Receptionist gets read-only via this policy; insert/update is gated
+-- in the service layer on top.
+create policy "freezes_tenant_select" on public.freezes
+  for select to authenticated
+  using (
+    gym_id = public.current_user_gym()
+    and (
+      public.current_user_role() = 'owner'
+      or branch_id = public.current_user_branch()
+    )
+  );
+
+create policy "freezes_tenant_insert" on public.freezes
+  for insert to authenticated
+  with check (
+    gym_id = public.current_user_gym()
+    and public.current_user_role() in ('owner', 'branch_manager')
+    and (
+      public.current_user_role() = 'owner'
+      or branch_id = public.current_user_branch()
+    )
+  );
+
+create policy "freezes_tenant_update" on public.freezes
+  for update to authenticated
+  using (
+    gym_id = public.current_user_gym()
+    and public.current_user_role() in ('owner', 'branch_manager')
+  )
+  with check (
+    gym_id = public.current_user_gym()
+    and public.current_user_role() in ('owner', 'branch_manager')
+  );

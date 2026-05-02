@@ -199,6 +199,13 @@ export function MembersFilters({
             onClick={() => setMembershipStatus("expired")}
           />
           <Pill
+            label="Frozen"
+            count={counts.frozen}
+            dot="bg-amber-500"
+            active={membershipStatus === "frozen"}
+            onClick={() => setMembershipStatus("frozen")}
+          />
+          <Pill
             label="No membership"
             count={counts.noMembership}
             dot="bg-muted-foreground/40"

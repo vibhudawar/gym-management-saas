@@ -5,6 +5,7 @@ import {
   MoreHorizontal,
   Pause,
   Pencil,
+  Play,
   RefreshCcw,
   XCircle,
 } from "lucide-react";
@@ -22,26 +23,32 @@ import {
   TooltipTrigger,
 } from "@/components/ui/tooltip";
 import { MembershipStatusBadge } from "@/components/shared/membership-status-badge";
+import type { CurrentFreeze } from "@/server/queries/freezes/get-current-freeze";
 import type { CurrentMembership } from "@/server/queries/memberships/get-current-membership";
 import type { Plan } from "@/lib/db/schema/plans";
 import type { AddOn } from "@/lib/db/schema/add-ons";
 import type { PaymentMode } from "@/lib/db/schema/payments";
 import { canCorrectMembership } from "@/lib/auth/membership-permissions";
-import type { Role } from "@/lib/auth/roles";
+import { isManagerOrOwner, type Role } from "@/lib/auth/roles";
 import { formatCalendarDate } from "@/lib/utils/dates";
 import { formatMoney } from "@/lib/utils/money";
 import { CancelMembershipDialog } from "./cancel-membership-dialog";
 import { CorrectionMarker } from "./correction-marker";
 import { CorrectionSheet } from "./correction-sheet";
 import { EnrollmentSheet } from "./enrollment-sheet";
+import { FreezeSheet } from "./freeze-sheet";
 import { RenewalSheet } from "./renewal-sheet";
+import { UnfreezeSheet } from "./unfreeze-sheet";
 
 const RENEWAL_WINDOW_DAYS = 14;
 
 type Props = {
   memberId: string;
+  memberName: string;
   branchId: string;
   current: CurrentMembership | null;
+  currentFreeze: CurrentFreeze | null;
+  pastFreezeCount: number;
   plans: Plan[];
   addOns: AddOn[];
   canEnrol: boolean;
@@ -68,10 +75,19 @@ function todayIso(): string {
   return new Date().toISOString().slice(0, 10);
 }
 
+function addDaysIso(iso: string, days: number): string {
+  const d = new Date(`${iso}T00:00:00Z`);
+  d.setUTCDate(d.getUTCDate() + days);
+  return d.toISOString().slice(0, 10);
+}
+
 export function CurrentMembershipCard({
   memberId,
+  memberName,
   branchId,
   current,
+  currentFreeze,
+  pastFreezeCount,
   plans,
   addOns,
   canEnrol,
@@ -82,6 +98,8 @@ export function CurrentMembershipCard({
   const [renewOpen, setRenewOpen] = useState(false);
   const [correctOpen, setCorrectOpen] = useState(false);
   const [cancelOpen, setCancelOpen] = useState(false);
+  const [freezeOpen, setFreezeOpen] = useState(false);
+  const [unfreezeOpen, setUnfreezeOpen] = useState(false);
 
   if (!current) {
     return (
@@ -132,12 +150,25 @@ export function CurrentMembershipCard({
   const canCorrect = correctionPermission.ok;
 
   const isOwner = user.role === "owner";
+  const canManage = isManagerOrOwner(user.role);
   const showCancelMenuItem =
     isOwner &&
     (current.effectiveStatus === "active" || current.effectiveStatus === "frozen");
-  const showFreezeButton = current.effectiveStatus === "active";
+  // Freeze button shows when active and there's no upcoming freeze already
+  // queued (one freeze at a time per spec).
+  const showFreezeButton =
+    canEnrol &&
+    canManage &&
+    current.effectiveStatus === "active" &&
+    !currentFreeze;
+  const showUnfreezeButton =
+    canEnrol &&
+    canManage &&
+    current.effectiveStatus === "frozen" &&
+    currentFreeze !== null;
   const showRenewButton =
     current.effectiveStatus === "active" || current.effectiveStatus === "expired";
+  const renewBlockedByFreeze = current.effectiveStatus === "frozen";
 
   return (
     <section className="bg-card rounded-xl border p-5">
@@ -168,6 +199,35 @@ export function CurrentMembershipCard({
             </>
           )}
         </p>
+        {current.effectiveStatus === "frozen" && currentFreeze ? (
+          <div className="border-amber-500/30 bg-amber-500/5 space-y-1 rounded-md border px-3 py-2 text-xs">
+            <p className="text-foreground">
+              <Pause className="mr-1 inline size-3 fill-amber-600 text-amber-600" />
+              Frozen {formatCalendarDate(currentFreeze.freezeStartDate)} →{" "}
+              {formatCalendarDate(currentFreeze.freezeEndDate)} (
+              {currentFreeze.daysAdded} day{currentFreeze.daysAdded === 1 ? "" : "s"})
+            </p>
+            <p className="text-muted-foreground">
+              Resumes{" "}
+              {formatCalendarDate(
+                addDaysIso(currentFreeze.freezeEndDate, 1),
+              )}{" "}
+              · End date {formatCalendarDate(current.endDate)}
+            </p>
+            <p className="text-foreground/80">
+              Reason: {currentFreeze.reason}
+            </p>
+          </div>
+        ) : null}
+        {current.effectiveStatus === "active" &&
+        currentFreeze?.effectiveStatus === "scheduled" ? (
+          <p className="text-amber-700 inline-flex items-center gap-1 text-xs italic">
+            <Pause className="size-3 fill-amber-700" />
+            Freeze scheduled{" "}
+            {formatCalendarDate(currentFreeze.freezeStartDate)} →{" "}
+            {formatCalendarDate(currentFreeze.freezeEndDate)}
+          </p>
+        ) : null}
         <p className="text-foreground font-medium">
           {formatMoney(current.finalAmountPaise)}
         </p>
@@ -206,7 +266,22 @@ export function CurrentMembershipCard({
       ) : (
         <div className="mt-4 flex items-center gap-2 border-t pt-4">
           {canEnrol && showRenewButton ? (
-            renewBlockedReason ? (
+            renewBlockedByFreeze ? (
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <span tabIndex={0}>
+                    <Button disabled variant="outline">
+                      <RefreshCcw className="size-4" />
+                      Renew
+                    </Button>
+                  </span>
+                </TooltipTrigger>
+                <TooltipContent>
+                  Cannot renew while frozen. Unfreeze first or wait for
+                  scheduled resume.
+                </TooltipContent>
+              </Tooltip>
+            ) : renewBlockedReason ? (
               <Tooltip>
                 <TooltipTrigger asChild>
                   <span tabIndex={0}>
@@ -228,17 +303,16 @@ export function CurrentMembershipCard({
             )
           ) : null}
           {showFreezeButton ? (
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <span tabIndex={0}>
-                  <Button variant="outline" disabled>
-                    <Pause className="size-4" />
-                    Freeze
-                  </Button>
-                </span>
-              </TooltipTrigger>
-              <TooltipContent>Freeze lands in Module 06</TooltipContent>
-            </Tooltip>
+            <Button variant="outline" onClick={() => setFreezeOpen(true)}>
+              <Pause className="size-4" />
+              Freeze
+            </Button>
+          ) : null}
+          {showUnfreezeButton ? (
+            <Button onClick={() => setUnfreezeOpen(true)}>
+              <Play className="size-4" />
+              Unfreeze now
+            </Button>
           ) : null}
           {canCorrect || showCancelMenuItem ? (
             <DropdownMenu>
@@ -316,6 +390,29 @@ export function CurrentMembershipCard({
           memberId={memberId}
           current={current}
           primaryPayment={primaryPayment}
+        />
+      ) : null}
+      {canManage ? (
+        <FreezeSheet
+          open={freezeOpen}
+          onOpenChange={setFreezeOpen}
+          memberId={memberId}
+          membershipId={current.id}
+          memberName={memberName}
+          planName={current.planName}
+          membershipEndDate={current.endDate}
+          pastFreezeCount={pastFreezeCount}
+        />
+      ) : null}
+      {canManage && currentFreeze ? (
+        <UnfreezeSheet
+          open={unfreezeOpen}
+          onOpenChange={setUnfreezeOpen}
+          memberId={memberId}
+          memberName={memberName}
+          planName={current.planName}
+          freeze={currentFreeze}
+          membershipEndDate={current.endDate}
         />
       ) : null}
     </section>

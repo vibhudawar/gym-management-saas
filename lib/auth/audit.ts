@@ -2,7 +2,13 @@ import { db } from "@/lib/db";
 import { auditLogs } from "@/lib/db/schema/audit-logs";
 import { getCurrentSession } from "./get-session";
 
-type AuditAction = "create" | "update" | "delete" | "correction" | "cancel";
+type AuditAction =
+  | "create"
+  | "update"
+  | "delete"
+  | "correction"
+  | "cancel"
+  | "cancel_early";
 
 export type AuditEntityType =
   | "gym"
