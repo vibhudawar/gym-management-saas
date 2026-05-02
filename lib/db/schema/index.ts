@@ -9,3 +9,4 @@ export * from "./memberships";
 export * from "./membership-addons";
 export * from "./payments";
 export * from "./invoice-sequences";
+export * from "./reminders";

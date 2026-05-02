@@ -32,8 +32,10 @@ export function ExcelExportButton({
           toast.info("Nothing to export — current filter has no rows.");
           return;
         }
-        if (rows.length > 5000) {
-          toast.info(`Exporting ${rows.length} rows. This may take a moment…`);
+        if (rows.length > 10000) {
+          toast.info(
+            `Generating file for ${rows.length.toLocaleString("en-IN")} rows…`,
+          );
         }
         const xlsx = await import("xlsx");
         const ws = xlsx.utils.json_to_sheet(rows);

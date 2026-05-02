@@ -27,6 +27,7 @@ type MembershipStatusKey =
   | "active"
   | "expiring"
   | "expired"
+  | "frozen"
   | "no_membership";
 
 type MembersFiltersProps = {

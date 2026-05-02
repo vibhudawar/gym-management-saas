@@ -10,6 +10,7 @@ export type MemberStatusFilter =
   | "active"
   | "expiring"
   | "expired"
+  | "frozen"
   | "no_membership";
 
 export type ListMembersInput = {
@@ -79,7 +80,6 @@ export async function listMembers(
   input: ListMembersInput = {},
 ): Promise<ListMembersResult> {
   const session = await requireUser();
-  const isOwner = session.user.role === "owner";
 
   const page = Math.max(1, input.page ?? 1);
   const pageSize = Math.min(
@@ -89,8 +89,8 @@ export async function listMembers(
 
   const conditions = [eq(members.gymId, session.gym.id)];
 
-  if (!isOwner && session.branch) {
-    conditions.push(eq(members.branchId, session.branch.id));
+  if (session.activeBranch) {
+    conditions.push(eq(members.branchId, session.activeBranch.id));
   }
   if (input.branchId && input.branchId !== "all") {
     conditions.push(eq(members.branchId, input.branchId));
@@ -124,6 +124,9 @@ export async function listMembers(
       conditions.push(
         sql`${latestEndDateSql}::date - current_date <= ${EXPIRING_WINDOW_DAYS}`,
       );
+      break;
+    case "frozen":
+      conditions.push(sql`${latestStatusSql} = 'frozen'`);
       break;
     case "no_membership":
       conditions.push(sql`${latestStatusSql} is null`);

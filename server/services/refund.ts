@@ -1,5 +1,6 @@
 import { and, eq, isNull, sql } from "drizzle-orm";
 import { db } from "@/lib/db";
+import { memberships } from "@/lib/db/schema/memberships";
 import { payments, type PaymentMode } from "@/lib/db/schema/payments";
 import { recordAudit } from "@/lib/auth/audit";
 import type { SessionContext } from "@/lib/auth/get-session";
@@ -25,6 +26,13 @@ export type RefundResult =
       ok: true;
       paymentId: string;
       invoiceNumber: string;
+      /**
+       * True when the cumulative refunds against the original payment now equal
+       * (or exceed) the linked membership's final amount AND the membership is
+       * still active/frozen. The UI uses this to prompt the owner to cancel.
+       */
+      requiresCancellationPrompt: boolean;
+      membershipId: string | null;
     }
   | { ok: false; code: RefundErrorCode; message: string };
 
@@ -131,10 +139,40 @@ export async function recordRefundService(
         })
         .returning();
 
+      // After this refund, total refunded against the original (positive integer):
+      // already is ≤ 0; subtract to flip sign.
+      const totalRefundedPositive = -already + input.amountPaise;
+      let requiresCancellationPrompt = false;
+      if (originalLocked.membershipId) {
+        const [membership] = await tx
+          .select({
+            status: memberships.status,
+            finalAmountPaise: memberships.finalAmountPaise,
+          })
+          .from(memberships)
+          .where(
+            and(
+              eq(memberships.id, originalLocked.membershipId),
+              eq(memberships.gymId, session.gym.id),
+              isNull(memberships.deletedAt),
+            ),
+          )
+          .limit(1);
+        if (
+          membership &&
+          (membership.status === "active" || membership.status === "frozen") &&
+          totalRefundedPositive >= membership.finalAmountPaise
+        ) {
+          requiresCancellationPrompt = true;
+        }
+      }
+
       return {
         ok: true as const,
         paymentId: refundRow.id,
         invoiceNumber,
+        requiresCancellationPrompt,
+        membershipId: originalLocked.membershipId ?? null,
         _audit: refundRow,
       };
     })
@@ -151,6 +189,8 @@ export async function recordRefundService(
           ok: true as const,
           paymentId: r.paymentId,
           invoiceNumber: r.invoiceNumber,
+          requiresCancellationPrompt: r.requiresCancellationPrompt,
+          membershipId: r.membershipId,
         };
       }
       return result;

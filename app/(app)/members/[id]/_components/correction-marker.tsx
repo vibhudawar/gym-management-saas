@@ -6,6 +6,11 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 import { formatDateTime } from "@/lib/utils/dates";
 
 type Props = {
@@ -19,6 +24,8 @@ type Props = {
         finalAmountPaise: number;
       }
     | null;
+  correctionCount?: number;
+  canViewAll?: boolean;
 };
 
 const LEVEL_LABEL: Record<NonNullable<Props["level"]>, string> = {
@@ -33,7 +40,10 @@ export function CorrectionMarker({
   level,
   reason,
   before,
+  correctionCount = 1,
+  canViewAll = false,
 }: Props) {
+  const showCount = correctionCount > 1;
   return (
     <Popover>
       <PopoverTrigger asChild>
@@ -45,6 +55,7 @@ export function CorrectionMarker({
           Corrected{" "}
           {correctedByName ? `by ${correctedByName}` : ""} on{" "}
           {formatDateTime(correctedAt)}
+          {showCount ? ` (${correctionCount} corrections)` : ""}
         </button>
       </PopoverTrigger>
       <PopoverContent className="w-80 text-xs" align="start">
@@ -74,6 +85,24 @@ export function CorrectionMarker({
                 ₹{(before.finalAmountPaise / 100).toLocaleString("en-IN")}
               </span>
             </p>
+          </div>
+        ) : null}
+        {canViewAll && showCount ? (
+          <div className="border-border mt-3 border-t pt-3">
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <span tabIndex={0}>
+                  <button
+                    type="button"
+                    disabled
+                    className="text-muted-foreground/70 cursor-not-allowed text-xs underline-offset-2 hover:underline"
+                  >
+                    View all {correctionCount} corrections →
+                  </button>
+                </span>
+              </TooltipTrigger>
+              <TooltipContent>Coming with Audit Log module</TooltipContent>
+            </Tooltip>
           </div>
         ) : null}
       </PopoverContent>

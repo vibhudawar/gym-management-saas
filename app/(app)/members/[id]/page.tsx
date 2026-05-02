@@ -107,6 +107,7 @@ export default async function MemberDetailPage({
             memberId={member.id}
             payments={payments}
             canManagePayments={owner && !isDeleted}
+            current={current}
           />
           <Suspense fallback={<Skeleton className="h-32 rounded-xl" />}>
             <MemberActivityCard memberId={member.id} />

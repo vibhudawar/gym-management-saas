@@ -188,6 +188,8 @@ export function CurrentMembershipCard({
             level={null}
             reason={null}
             before={null}
+            correctionCount={current.correctionCount}
+            canViewAll={user.role === "owner"}
           />
         ) : null}
       </div>

@@ -342,3 +342,43 @@ create policy "invoice_sequences_tenant_update" on public.invoice_sequences
   for update to authenticated
   using (gym_id = public.current_user_gym())
   with check (gym_id = public.current_user_gym());
+
+-- ----- reminders ------------------------------------------------------------
+alter table public.reminders enable row level security;
+
+drop policy if exists "reminders_tenant_select" on public.reminders;
+drop policy if exists "reminders_tenant_insert" on public.reminders;
+
+-- Branch-scoped: owners see all reminders in the gym; branch_manager and
+-- receptionist see only reminders for members in their branch (joined to the
+-- members table to derive the branch).
+create policy "reminders_tenant_select" on public.reminders
+  for select to authenticated
+  using (
+    gym_id = public.current_user_gym()
+    and (
+      public.current_user_role() = 'owner'
+      or exists (
+        select 1 from public.members m
+        where m.id = reminders.member_id
+          and m.branch_id = public.current_user_branch()
+      )
+    )
+  );
+
+create policy "reminders_tenant_insert" on public.reminders
+  for insert to authenticated
+  with check (
+    gym_id = public.current_user_gym()
+    and (
+      public.current_user_role() = 'owner'
+      or exists (
+        select 1 from public.members m
+        where m.id = reminders.member_id
+          and m.branch_id = public.current_user_branch()
+      )
+    )
+  );
+
+-- No UPDATE / DELETE policy — reminders are append-only (corrections insert a
+-- new row; you can't unsend a message).

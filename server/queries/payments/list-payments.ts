@@ -52,7 +52,6 @@ export async function listPayments(
   input: ListPaymentsInput = {},
 ): Promise<ListPaymentsResult> {
   const session = await requireUser();
-  const isOwner = session.user.role === "owner";
 
   const page = Math.max(1, input.page ?? 1);
   const pageSize = Math.min(
@@ -64,8 +63,8 @@ export async function listPayments(
     eq(payments.gymId, session.gym.id),
     isNull(payments.deletedAt),
   ];
-  if (!isOwner && session.branch) {
-    conditions.push(eq(payments.branchId, session.branch.id));
+  if (session.activeBranch) {
+    conditions.push(eq(payments.branchId, session.activeBranch.id));
   }
   if (input.branchId && input.branchId !== "all") {
     conditions.push(eq(payments.branchId, input.branchId));

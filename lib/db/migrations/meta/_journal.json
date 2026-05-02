@@ -36,6 +36,13 @@
       "when": 1777584959502,
       "tag": "0004_familiar_golden_guardian",
       "breakpoints": true
+    },
+    {
+      "idx": 5,
+      "version": "7",
+      "when": 1777721735171,
+      "tag": "0005_pale_thor",
+      "breakpoints": true
     }
   ]
 }

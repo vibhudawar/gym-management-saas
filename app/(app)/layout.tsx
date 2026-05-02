@@ -19,7 +19,8 @@ export default async function AppLayout({
         gymName={session.gym.name}
         subscriptionTier={session.gym.subscriptionTier}
         branches={branchRows}
-        activeBranchId={session.branch?.id ?? null}
+        activeBranchId={session.activeBranch?.id ?? null}
+        canSwitchAll={session.user.role === "owner"}
         user={{
           name: session.user.name,
           email: session.email,

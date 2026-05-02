@@ -42,14 +42,13 @@ export async function countMembersByStatus(
   branchId?: string,
 ): Promise<MembershipStatusCounts> {
   const session = await requireUser();
-  const isOwner = session.user.role === "owner";
 
   const conditions = [
     eq(members.gymId, session.gym.id),
     isNull(members.deletedAt),
   ];
-  if (!isOwner && session.branch) {
-    conditions.push(eq(members.branchId, session.branch.id));
+  if (session.activeBranch) {
+    conditions.push(eq(members.branchId, session.activeBranch.id));
   }
   if (branchId && branchId !== "all") {
     conditions.push(eq(members.branchId, branchId));

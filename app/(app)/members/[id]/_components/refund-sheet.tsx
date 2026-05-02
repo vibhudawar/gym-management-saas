@@ -15,6 +15,14 @@ import {
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
 import { Button } from "@/components/ui/button";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import {
@@ -29,16 +37,21 @@ import {
 import { Textarea } from "@/components/ui/textarea";
 import { MoneyInput } from "@/components/shared/money-input";
 import { PaymentModeSelector } from "@/components/shared/payment-mode-selector";
+import type { CurrentMembership } from "@/server/queries/memberships/get-current-membership";
 import type { MemberPaymentRow } from "@/server/queries/payments/get-payments-by-member";
 import type { PaymentMode } from "@/lib/db/schema/payments";
 import { formatCalendarDate } from "@/lib/utils/dates";
 import { formatMoney } from "@/lib/utils/money";
 import { recordRefund } from "@/server/actions/payments/record-refund";
+import { CancelMembershipDialog } from "./cancel-membership-dialog";
 
 type Props = {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   payment: MemberPaymentRow | null;
+  /** When provided, lets us offer a "cancel membership" follow-up after a full refund. */
+  current?: CurrentMembership | null;
+  memberId?: string;
 };
 
 const MIN_REASON = 10;
@@ -47,13 +60,28 @@ function todayIso(): string {
   return new Date().toISOString().slice(0, 10);
 }
 
-export function RefundSheet({ open, onOpenChange, payment }: Props) {
+export function RefundSheet({
+  open,
+  onOpenChange,
+  payment,
+  current,
+  memberId,
+}: Props) {
   const [amountPaise, setAmountPaise] = useState<number>(0);
   const [mode, setMode] = useState<PaymentMode>("cash");
   const [refundDate, setRefundDate] = useState<string>(todayIso());
   const [reason, setReason] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [isPending, startTransition] = useTransition();
+
+  // After a full refund, surface a follow-up prompt asking whether to cancel the
+  // membership too. We hold the invoice number so the prefilled cancel reason
+  // can reference it.
+  const [pendingCancelPrompt, setPendingCancelPrompt] = useState<{
+    invoiceNumber: string;
+  } | null>(null);
+  const [cancelDialogOpen, setCancelDialogOpen] = useState(false);
+  const [cancelInitialReason, setCancelInitialReason] = useState<string>("");
 
   useEffect(() => {
     if (!open || !payment) return;
@@ -65,10 +93,17 @@ export function RefundSheet({ open, onOpenChange, payment }: Props) {
     setRefundDate(todayIso());
     setReason("");
     setError(null);
+    setPendingCancelPrompt(null);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [open, payment?.id]);
 
   if (!payment) return null;
+
+  // Only offer the prompt when refunding a payment tied to the *current*
+  // membership the parent has loaded. Refunds on older memberships never
+  // trigger the auto-cancel flow.
+  const promptableMembership =
+    current && current.id === payment.membershipId ? current : null;
 
   function submit() {
     if (!payment) return;
@@ -86,8 +121,33 @@ export function RefundSheet({ open, onOpenChange, payment }: Props) {
         return;
       }
       toast.success(`Refund issued · invoice ${result.invoiceNumber}`);
+      if (
+        result.requiresCancellationPrompt &&
+        promptableMembership &&
+        result.membershipId === promptableMembership.id
+      ) {
+        setPendingCancelPrompt({ invoiceNumber: result.invoiceNumber });
+        return;
+      }
       onOpenChange(false);
     });
+  }
+
+  function handleKeepActive() {
+    setPendingCancelPrompt(null);
+    onOpenChange(false);
+  }
+
+  function handleCancelMembership() {
+    if (!pendingCancelPrompt) return;
+    setCancelInitialReason(
+      `Full refund issued (Invoice ${pendingCancelPrompt.invoiceNumber}).`,
+    );
+    setPendingCancelPrompt(null);
+    onOpenChange(false);
+    // Defer opening the cancel dialog until after the sheet is unmounted to
+    // avoid focus-trap clashes between Sheet and Dialog.
+    requestAnimationFrame(() => setCancelDialogOpen(true));
   }
 
   const canSubmit =
@@ -210,6 +270,60 @@ export function RefundSheet({ open, onOpenChange, payment }: Props) {
           </div>
         </SheetFooter>
       </SheetContent>
+
+      {/* Full-refund follow-up: ask whether to cancel the membership too. */}
+      <Dialog
+        open={pendingCancelPrompt !== null}
+        onOpenChange={(o) => {
+          if (!o) handleKeepActive();
+        }}
+      >
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>Refund completed</DialogTitle>
+            <DialogDescription>
+              This refund returns the full{" "}
+              {promptableMembership
+                ? formatMoney(promptableMembership.finalAmountPaise)
+                : "amount"}{" "}
+              paid for this membership.
+            </DialogDescription>
+          </DialogHeader>
+          <p className="text-muted-foreground text-sm">
+            Should we also cancel the membership? Otherwise the member will
+            retain access despite getting their money back.
+          </p>
+          <DialogFooter>
+            <Button
+              type="button"
+              variant="outline"
+              onClick={handleKeepActive}
+              className="w-fit"
+            >
+              Keep membership active
+            </Button>
+            <Button
+              type="button"
+              onClick={handleCancelMembership}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90 w-fit"
+              autoFocus
+            >
+              Cancel membership
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {promptableMembership && memberId ? (
+        <CancelMembershipDialog
+          open={cancelDialogOpen}
+          onOpenChange={setCancelDialogOpen}
+          memberId={memberId}
+          current={promptableMembership}
+          primaryPayment={null}
+          initialReason={cancelInitialReason}
+        />
+      ) : null}
     </Sheet>
   );
 }

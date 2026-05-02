@@ -28,10 +28,22 @@ const VALID_MEMBERSHIP_STATUSES = [
   "active",
   "expiring",
   "expired",
+  "frozen",
   "no_membership",
 ] as const;
 
 type MembershipStatusFilter = (typeof VALID_MEMBERSHIP_STATUSES)[number];
+
+const VALID_SORT_BY = ["name", "joined_date", "membership"] as const;
+type SortBy = (typeof VALID_SORT_BY)[number];
+const VALID_SORT_DIR = ["asc", "desc"] as const;
+type SortDir = (typeof VALID_SORT_DIR)[number];
+
+const DEFAULT_SORT_DIR: Record<SortBy, SortDir> = {
+  name: "asc",
+  joined_date: "desc",
+  membership: "asc",
+};
 
 export default async function MembersPage({
   searchParams,
@@ -62,6 +74,15 @@ export default async function MembersPage({
   const page = Math.max(1, Number(asString(params.page) ?? "1") || 1);
   const pageSize = 50;
 
+  const sortByRaw = asString(params.sort) as SortBy | undefined;
+  const sortDirRaw = asString(params.dir) as SortDir | undefined;
+  const sortBy: SortBy = VALID_SORT_BY.includes(sortByRaw as SortBy)
+    ? (sortByRaw as SortBy)
+    : "name";
+  const sortDir: SortDir = VALID_SORT_DIR.includes(sortDirRaw as SortDir)
+    ? (sortDirRaw as SortDir)
+    : DEFAULT_SORT_DIR[sortBy];
+
   const [result, counts, plans, addOns] = await Promise.all([
     listMembers({
       search,
@@ -70,8 +91,8 @@ export default async function MembersPage({
       membershipStatus,
       page,
       pageSize,
-      sortBy: "name",
-      sortDir: "asc",
+      sortBy,
+      sortDir,
     }),
     statusParam === "active"
       ? countMembersByStatus(branchFilter)
@@ -85,7 +106,7 @@ export default async function MembersPage({
       ? `${result.total.toLocaleString("en-IN")} members across ${branches.length} branches`
       : `${result.total.toLocaleString("en-IN")} members`;
 
-  const defaultBranchId = session.branch?.id ?? branches[0]?.id ?? "";
+  const defaultBranchId = session.activeBranch?.id ?? branches[0]?.id ?? "";
   const filterApplied = !!(
     search ||
     (branchFilter && branchFilter !== "all") ||
@@ -134,6 +155,8 @@ export default async function MembersPage({
           onClearFilters="/members"
           plans={plans}
           addOns={addOns}
+          sortBy={sortBy}
+          sortDir={sortDir}
         />
       </div>
     </div>

@@ -25,7 +25,6 @@ export async function listExpiringMemberships(
   input: ListExpiringInput,
 ): Promise<ExpiringMembership[]> {
   const session = await requireUser();
-  const isOwner = session.user.role === "owner";
 
   const conditions = [
     eq(memberships.gymId, session.gym.id),
@@ -37,8 +36,8 @@ export async function listExpiringMemberships(
       sql`current_date + (${input.daysAhead} || ' days')::interval`,
     ),
   ];
-  if (!isOwner && session.branch) {
-    conditions.push(eq(memberships.branchId, session.branch.id));
+  if (session.activeBranch) {
+    conditions.push(eq(memberships.branchId, session.activeBranch.id));
   }
   if (input.branchId && input.branchId !== "all") {
     conditions.push(eq(memberships.branchId, input.branchId));

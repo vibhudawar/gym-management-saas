@@ -11,6 +11,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import type { CurrentMembership } from "@/server/queries/memberships/get-current-membership";
 import type { MemberPaymentRow } from "@/server/queries/payments/get-payments-by-member";
 import type { PaymentMode } from "@/lib/db/schema/payments";
 import { formatCalendarDate } from "@/lib/utils/dates";
@@ -30,12 +31,14 @@ type Props = {
   memberId: string;
   payments: MemberPaymentRow[];
   canManagePayments: boolean;
+  current: CurrentMembership | null;
 };
 
 export function RecentPaymentsCard({
   memberId,
   payments,
   canManagePayments,
+  current,
 }: Props) {
   const [refundFor, setRefundFor] = useState<MemberPaymentRow | null>(null);
   const [editFor, setEditFor] = useState<MemberPaymentRow | null>(null);
@@ -135,6 +138,8 @@ export function RecentPaymentsCard({
         open={refundFor !== null}
         onOpenChange={(o) => !o && setRefundFor(null)}
         payment={refundFor}
+        current={current}
+        memberId={memberId}
       />
       <EditPaymentSheet
         open={editFor !== null}

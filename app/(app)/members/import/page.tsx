@@ -18,7 +18,7 @@ export default async function MembersImportPage() {
     redirect("/members");
   }
 
-  const defaultBranchId = session.branch?.id ?? branches[0].id;
+  const defaultBranchId = session.activeBranch?.id ?? branches[0].id;
 
   return (
     <div className="mx-auto w-full max-w-5xl">

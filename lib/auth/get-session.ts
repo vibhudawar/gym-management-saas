@@ -1,4 +1,5 @@
 import { and, eq, isNull } from "drizzle-orm";
+import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 import { cache } from "react";
 import { db } from "@/lib/db";
@@ -8,12 +9,21 @@ import { users, type User } from "@/lib/db/schema/users";
 import { createSupabaseServerClient } from "./supabase-server";
 import { ALL_ROLES, type Role } from "./roles";
 
+export const ACTIVE_BRANCH_COOKIE = "active_branch_id";
+
 export type SessionContext = {
   authUserId: string;
   email: string;
   user: User;
   gym: Gym;
+  /** The user's permanent branch assignment (null for owners). Used for permission checks. */
   branch: Branch | null;
+  /**
+   * The branch currently in view. Equals `branch` for non-owners. For owners it
+   * reflects the cookie-backed selector — `null` means "all branches". Use this
+   * for data filters; never for permission checks.
+   */
+  activeBranch: Branch | null;
 };
 
 /**
@@ -60,12 +70,36 @@ export const getCurrentSession = cache(async (): Promise<SessionContext | null> 
   if (row.length === 0) return null;
   const { user, gym, branch } = row[0];
 
+  let activeBranch: Branch | null = branch ?? null;
+  if (user.role === "owner") {
+    const cookieStore = await cookies();
+    const cookieBranchId = cookieStore.get(ACTIVE_BRANCH_COOKIE)?.value;
+    if (cookieBranchId) {
+      const found = await db
+        .select()
+        .from(branches)
+        .where(
+          and(
+            eq(branches.id, cookieBranchId),
+            eq(branches.gymId, gym.id),
+            eq(branches.isActive, true),
+            isNull(branches.deletedAt),
+          ),
+        )
+        .limit(1);
+      activeBranch = found[0] ?? null;
+    } else {
+      activeBranch = null;
+    }
+  }
+
   return {
     authUserId,
     email: typeof claims.email === "string" ? claims.email : user.email,
     user,
     gym,
     branch: branch ?? null,
+    activeBranch,
   };
 });
 

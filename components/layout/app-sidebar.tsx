@@ -60,6 +60,7 @@ type AppSidebarProps = {
   subscriptionTier: "basic" | "pro";
   branches: ReadonlyArray<{ id: string; name: string }>;
   activeBranchId: string | null;
+  canSwitchAll: boolean;
   user: { name: string; email: string; role: Role; roleLabel: string };
 };
 
@@ -68,6 +69,7 @@ export function AppSidebar({
   subscriptionTier,
   branches,
   activeBranchId,
+  canSwitchAll,
   user,
 }: AppSidebarProps) {
   const pathname = usePathname();
@@ -76,9 +78,9 @@ export function AppSidebar({
   );
 
   return (
-    <Sidebar collapsible="icon">
+    <Sidebar collapsible="icon" variant="inset">
       <SidebarHeader className="gap-0 p-0">
-        <div className="flex h-14 items-center border-b px-3 group-data-[collapsible=icon]:hidden">
+        <div className="flex h-14 items-center px-3 group-data-[collapsible=icon]:hidden">
           <div className="min-w-0">
             <p className="text-muted-foreground text-[11px] leading-none font-medium tracking-wide uppercase">
               Gym
@@ -88,10 +90,11 @@ export function AppSidebar({
             </p>
           </div>
         </div>
-        <div className="px-3 py-2 group-data-[collapsible=icon]:hidden">
+        <div className="px-3 pb-2 group-data-[collapsible=icon]:hidden">
           <BranchSelector
             branches={[...branches]}
             activeBranchId={activeBranchId}
+            canSwitchAll={canSwitchAll}
           />
         </div>
       </SidebarHeader>
@@ -112,6 +115,7 @@ export function AppSidebar({
                       asChild
                       isActive={isActive}
                       tooltip={item.label}
+                      className="data-[active=true]:bg-primary data-[active=true]:text-primary-foreground data-[active=true]:hover:bg-primary/90 data-[active=true]:hover:text-primary-foreground data-[active=true]:active:bg-primary/90 data-[active=true]:active:text-primary-foreground"
                     >
                       <Link href={item.href}>
                         <Icon className="size-4" />

@@ -14,6 +14,9 @@ import { MembersTable } from "./members-table";
 
 type Branch = { id: string; name: string };
 
+export type MembersSortBy = "name" | "joined_date" | "membership";
+export type MembersSortDir = "asc" | "desc";
+
 type MembersListClientProps = {
   rows: MemberListRow[];
   total: number;
@@ -30,6 +33,8 @@ type MembersListClientProps = {
   onClearFilters: string;
   plans?: Plan[];
   addOns?: AddOn[];
+  sortBy: MembersSortBy;
+  sortDir: MembersSortDir;
 };
 
 export function MembersListClient({
@@ -48,6 +53,8 @@ export function MembersListClient({
   onClearFilters,
   plans,
   addOns,
+  sortBy,
+  sortDir,
 }: MembersListClientProps) {
   const [editing, setEditing] = useState<MemberListRow | null>(null);
   const [createOpen, setCreateOpen] = useState(false);
@@ -108,6 +115,8 @@ export function MembersListClient({
         canRestore={canRestore}
         status={status}
         onEdit={(row) => setEditing(row)}
+        sortBy={sortBy}
+        sortDir={sortDir}
       />
       <MembersPagination page={page} pageSize={pageSize} total={total} />
       <MemberFormSheet

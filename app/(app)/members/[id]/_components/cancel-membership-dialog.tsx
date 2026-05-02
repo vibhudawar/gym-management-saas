@@ -32,6 +32,8 @@ type Props = {
   memberId: string;
   current: CurrentMembership;
   primaryPayment: { id: string; amountPaise: number; alreadyRefundedPaise: number } | null;
+  /** Pre-populated reason (e.g. when triggered from a full-refund flow). */
+  initialReason?: string;
 };
 
 function todayIso(): string {
@@ -50,6 +52,7 @@ export function CancelMembershipDialog({
   memberId,
   current,
   primaryPayment,
+  initialReason,
 }: Props) {
   const [effectiveDate, setEffectiveDate] = useState<string>(todayIso());
   const [reason, setReason] = useState("");
@@ -63,12 +66,12 @@ export function CancelMembershipDialog({
     if (!open) return;
     // eslint-disable-next-line react-hooks/set-state-in-effect
     setEffectiveDate(todayIso());
-    setReason("");
+    setReason(initialReason ?? "");
     setIssueRefund(false);
     setRefundAmount(0);
     setRefundMode("cash");
     setError(null);
-  }, [open, current.id]);
+  }, [open, current.id, initialReason]);
 
   const totalDays = Math.max(
     1,

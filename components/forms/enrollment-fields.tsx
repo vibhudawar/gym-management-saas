@@ -64,20 +64,34 @@ function addDaysIso(iso: string, days: number): string {
   return d.toISOString().slice(0, 10);
 }
 
+export function isPreviousPlanInactive(config: EnrollmentFieldsConfig): boolean {
+  if (!config.renewal?.previousPlanId) return false;
+  const activePlans = config.plans.filter((p) => p.isActive);
+  return !activePlans.some((p) => p.id === config.renewal!.previousPlanId);
+}
+
 export function buildInitialEnrollmentState(
   config: EnrollmentFieldsConfig,
 ): EnrollmentFieldsState {
   const activePlans = config.plans.filter((p) => p.isActive);
   const activeAddOns = config.addOns.filter((a) => a.isActive);
+  const previousPlanInactive = isPreviousPlanInactive(config);
 
-  const initialPlanId =
-    config.renewal?.previousPlanId &&
-    activePlans.some((p) => p.id === config.renewal!.previousPlanId)
-      ? config.renewal.previousPlanId
-      : (activePlans[0]?.id ?? "");
+  const initialPlanId = (() => {
+    if (config.renewal) {
+      // If the previous plan was deactivated, leave the picker empty so the user
+      // makes a deliberate choice (and the notice can render).
+      if (previousPlanInactive) return "";
+      return config.renewal.previousPlanId ?? activePlans[0]?.id ?? "";
+    }
+    return activePlans[0]?.id ?? "";
+  })();
 
   const initialAddOnIds: string[] = (() => {
     if (config.renewal) {
+      // Wipe add-ons too when the previous plan is gone — the user is rebuilding
+      // the enrolment from scratch.
+      if (previousPlanInactive) return [];
       return config.renewal.previousAddOnIds.filter((id) =>
         activeAddOns.some((a) => a.id === id && a.type === "recurring"),
       );
@@ -179,17 +193,24 @@ export function EnrollmentFields({
     [addOns],
   );
 
-  // Reset state when config-derived initial values shift (e.g. renewal data arrives).
-  const initialPlanId = useMemo(
+  const previousPlanInactive = useMemo(
     () =>
-      renewal?.previousPlanId &&
-      activePlans.some((p) => p.id === renewal.previousPlanId)
-        ? renewal.previousPlanId
-        : (activePlans[0]?.id ?? ""),
+      !!renewal?.previousPlanId &&
+      !activePlans.some((p) => p.id === renewal.previousPlanId),
     [renewal, activePlans],
   );
+
+  // Reset state when config-derived initial values shift (e.g. renewal data arrives).
+  const initialPlanId = useMemo(() => {
+    if (renewal) {
+      if (previousPlanInactive) return "";
+      return renewal.previousPlanId ?? activePlans[0]?.id ?? "";
+    }
+    return activePlans[0]?.id ?? "";
+  }, [renewal, previousPlanInactive, activePlans]);
   const initialAddOnSig = useMemo(() => {
     if (renewal) {
+      if (previousPlanInactive) return "";
       return renewal.previousAddOnIds
         .filter((id) =>
           activeAddOns.some((a) => a.id === id && a.type === "recurring"),
@@ -203,7 +224,7 @@ export function EnrollmentFields({
         .join(",");
     }
     return "";
-  }, [renewal, isFirstEnrollment, activeAddOns]);
+  }, [renewal, previousPlanInactive, isFirstEnrollment, activeAddOns]);
 
   useEffect(() => {
     // Pre-fill changes need to flow into local state when the config shifts.
@@ -269,6 +290,11 @@ export function EnrollmentFields({
               ))}
             </SelectContent>
           </Select>
+          {previousPlanInactive ? (
+            <p className="text-amber-700 text-xs">
+              Previous plan is no longer active. Pick a new plan.
+            </p>
+          ) : null}
           {derived.selectedPlan && derived.computedEndDate ? (
             <p className="text-muted-foreground text-xs">
               {formatMoney(derived.selectedPlan.defaultPricePaise)} ·{" "}
@@ -369,22 +395,42 @@ export function EnrollmentFields({
               variant="outline"
               className="w-full"
             >
-              <ToggleGroupItem value="from_previous_end" className="flex-1 text-xs">
+              <ToggleGroupItem
+                value="from_previous_end"
+                className="flex-1 text-xs"
+              >
                 From end of previous
-                <span className="text-muted-foreground ml-1">
-                  ({formatCalendarDate(addDaysIso(renewal.previousEndDate, 1))})
-                </span>
               </ToggleGroupItem>
               <ToggleGroupItem value="from_today" className="flex-1 text-xs">
                 From today
-                <span className="text-muted-foreground ml-1">
-                  ({formatCalendarDate(todayIso())})
-                </span>
               </ToggleGroupItem>
               <ToggleGroupItem value="custom" className="flex-1 text-xs">
                 Custom
               </ToggleGroupItem>
             </ToggleGroup>
+            <p className="text-muted-foreground text-xs">
+              {state.startMode === "from_previous_end" ? (
+                <>
+                  Membership will start on{" "}
+                  <span className="text-foreground font-medium">
+                    {formatCalendarDate(
+                      addDaysIso(renewal.previousEndDate, 1),
+                    )}
+                  </span>{" "}
+                  (day after current end date).
+                </>
+              ) : state.startMode === "from_today" ? (
+                <>
+                  Membership will start on{" "}
+                  <span className="text-foreground font-medium">
+                    {formatCalendarDate(todayIso())}
+                  </span>
+                  .
+                </>
+              ) : (
+                "Pick a custom start date below."
+              )}
+            </p>
             {state.startMode === "custom" ? (
               <Input
                 type="date"

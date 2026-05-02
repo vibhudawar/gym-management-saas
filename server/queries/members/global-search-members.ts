@@ -19,15 +19,14 @@ export async function globalSearchMembers(
   if (trimmed.length < 2) return [];
 
   const session = await requireUser();
-  const isOwner = session.user.role === "owner";
   const pattern = `%${trimmed}%`;
 
   const conditions = [
     eq(members.gymId, session.gym.id),
     isNull(members.deletedAt),
   ];
-  if (!isOwner && session.branch) {
-    conditions.push(eq(members.branchId, session.branch.id));
+  if (session.activeBranch) {
+    conditions.push(eq(members.branchId, session.activeBranch.id));
   }
   const searchClause = or(
     ilike(members.name, pattern),

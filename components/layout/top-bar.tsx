@@ -7,7 +7,7 @@ import { GlobalSearchTrigger } from "./global-search";
 
 export function TopBar() {
   return (
-    <header className="bg-background sticky top-0 z-30 flex h-14 items-center gap-3 border-b px-4">
+    <header className="bg-background sticky top-0 z-30 flex h-14 items-center gap-3 rounded-t-xl border-b px-4">
       <SidebarTrigger className="-ml-1" />
       <GlobalSearchTrigger />
       <div className="ml-auto flex items-center gap-1">

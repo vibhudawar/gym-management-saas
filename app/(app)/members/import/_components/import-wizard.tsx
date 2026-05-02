@@ -9,7 +9,7 @@ import {
   Loader2,
   Upload,
 } from "lucide-react";
-import Papa, { type ParseResult } from "papaparse";
+import Papa from "papaparse";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useMemo, useRef, useState, useTransition } from "react";
@@ -60,7 +60,7 @@ type ImportWizardProps = {
   existingPhones: string[];
 };
 
-type WizardStep = "upload" | "preview" | "importing" | "done";
+type WizardStep = "upload" | "parsing" | "preview" | "importing" | "done";
 
 const STATUS_LABEL: Record<ImportStatus, string> = {
   valid: "Valid",
@@ -95,6 +95,11 @@ export function ImportWizard({
     skipped: number;
     perRowErrors: Array<{ rowNumber: number; error: string }>;
   } | null>(null);
+  const [parseProgress, setParseProgress] = useState<{
+    current: number;
+    total: number;
+  } | null>(null);
+  const [importPayloadCount, setImportPayloadCount] = useState(0);
   const [isPending, startTransition] = useTransition();
 
   const visibleRows = useMemo(() => {
@@ -102,44 +107,86 @@ export function ImportWizard({
     return rows.filter((r) => r.status === filter);
   }, [rows, filter]);
 
-  function handleFile(file: File) {
+  async function handleFile(file: File) {
     if (file.size > MAX_FILE_BYTES) {
       toast.error("File is over the 5 MB limit.");
       return;
     }
     setFileName(file.name);
 
-    Papa.parse<Record<string, string>>(file, {
+    // Read once to estimate total row count for the determinate progress bar.
+    // Cheaper than parsing twice; PapaParse then runs over the same text and
+    // delivers structured rows via its `step` callback.
+    let text: string;
+    try {
+      text = await file.text();
+    } catch (err) {
+      console.error("File.text() failed", err);
+      toast.error("Could not read this file.");
+      return;
+    }
+
+    const newlineCount = (text.match(/\n/g) ?? []).length;
+    const trailingNewline = text.endsWith("\n");
+    const lineCount = newlineCount + (trailingNewline ? 0 : 1);
+    const estimatedRows = Math.max(0, lineCount - 1); // minus header
+
+    setStep("parsing");
+    setParseProgress({ current: 0, total: estimatedRows });
+
+    const collected: Record<string, string>[] = [];
+    let parseHeaders: string[] = [];
+    let parseErrored = false;
+
+    Papa.parse<Record<string, string>>(text, {
       header: true,
       skipEmptyLines: true,
       dynamicTyping: false,
       worker: false,
-      complete(parsed: ParseResult<Record<string, string>>) {
-        if (parsed.errors.length > 0 && parsed.data.length === 0) {
+      step(result) {
+        if (parseErrored) return;
+        if (parseHeaders.length === 0 && result.meta.fields) {
+          parseHeaders = result.meta.fields.map((h) => h.trim().toLowerCase());
+        }
+        collected.push(result.data as Record<string, string>);
+        setParseProgress({
+          current: collected.length,
+          total: Math.max(estimatedRows, collected.length),
+        });
+      },
+      complete() {
+        if (parseErrored) return;
+
+        if (collected.length === 0) {
           toast.error(
             "We couldn't read this CSV. Make sure the first row is the header.",
           );
+          setStep("upload");
+          setParseProgress(null);
           return;
         }
 
-        const headers = Object.keys(parsed.data[0] ?? {}).map((h) =>
-          h.trim().toLowerCase(),
-        );
         const requiredHeaders = ["name", "phone"];
-        const missing = requiredHeaders.filter((h) => !headers.includes(h));
+        const missing = requiredHeaders.filter(
+          (h) => !parseHeaders.includes(h),
+        );
         if (missing.length > 0) {
           toast.error(
             `Missing required columns: ${missing.join(", ")}. Download the template to see the format.`,
           );
+          setStep("upload");
+          setParseProgress(null);
           return;
         }
 
-        if (parsed.data.length > MAX_ROWS) {
+        if (collected.length > MAX_ROWS) {
           toast.error(`Too many rows. Limit is ${MAX_ROWS}.`);
+          setStep("upload");
+          setParseProgress(null);
           return;
         }
 
-        const rawRows: RawCsvRow[] = parsed.data.map((row) => {
+        const rawRows: RawCsvRow[] = collected.map((row) => {
           const out: RawCsvRow = {};
           for (const key of Object.keys(row)) {
             const norm = key.trim().toLowerCase().replace(/\s+/g, "_");
@@ -159,11 +206,15 @@ export function ImportWizard({
         setRows(result.rows);
         setSummary(result.summary);
         setFilter("all");
+        setParseProgress(null);
         setStep("preview");
       },
-      error(err) {
+      error(err: unknown) {
+        parseErrored = true;
         console.error("PapaParse error", err);
         toast.error("Could not parse this CSV.");
+        setStep("upload");
+        setParseProgress(null);
       },
     });
   }
@@ -187,6 +238,7 @@ export function ImportWizard({
       return;
     }
 
+    setImportPayloadCount(payload.length);
     setStep("importing");
     startTransition(async () => {
       const result = await importMembers(payload);
@@ -244,16 +296,43 @@ export function ImportWizard({
     );
   }
 
+  if (step === "parsing" && parseProgress) {
+    const percent =
+      parseProgress.total > 0
+        ? Math.min(100, Math.round((parseProgress.current / parseProgress.total) * 100))
+        : 0;
+    return (
+      <div className="mx-auto max-w-md py-16 text-center">
+        <Loader2 className="text-primary mx-auto size-10 animate-spin" />
+        <p className="text-foreground mt-4 text-sm font-medium">
+          Parsing {parseProgress.current.toLocaleString("en-IN")} /{" "}
+          {parseProgress.total.toLocaleString("en-IN")} rows…
+        </p>
+        <div className="bg-muted mx-auto mt-4 h-2 w-full max-w-xs overflow-hidden rounded-full">
+          <div
+            className="bg-primary h-full transition-[width] duration-150 ease-out"
+            style={{ width: `${percent}%` }}
+          />
+        </div>
+        <p className="text-muted-foreground mt-2 text-xs">{percent}%</p>
+      </div>
+    );
+  }
+
   if (step === "importing") {
     return (
       <div className="mx-auto max-w-md py-16 text-center">
         <Loader2 className="text-primary mx-auto size-10 animate-spin" />
         <p className="text-foreground mt-4 text-sm font-medium">
-          Importing members…
+          Inserting {importPayloadCount.toLocaleString("en-IN")} members…
         </p>
         <p className="text-muted-foreground mt-1 text-xs">
-          Hold on. We&apos;re inserting in batches of 100.
+          Hold on. This runs in a single transaction — about 30 seconds for
+          1,000 rows.
         </p>
+        <div className="bg-muted mx-auto mt-4 h-2 w-full max-w-xs overflow-hidden rounded-full">
+          <div className="bg-primary/70 h-full w-1/3 animate-pulse" />
+        </div>
       </div>
     );
   }

@@ -4,6 +4,21 @@ import { formatInTimeZone } from "date-fns-tz";
 const IST = "Asia/Kolkata";
 
 /**
+ * Today's calendar date in IST as a YYYY-MM-DD string. Use this when computing
+ * "today's revenue" or "expiring in 14 days" — anchoring to IST avoids the
+ * 11:55 PM bug where a payment lands in UTC's "tomorrow".
+ */
+export function todayIstIso(): string {
+  return formatInTimeZone(new Date(), IST, "yyyy-MM-dd");
+}
+
+/** Yesterday's IST calendar date as YYYY-MM-DD. */
+export function yesterdayIstIso(): string {
+  const yesterday = new Date(Date.now() - 24 * 60 * 60 * 1000);
+  return formatInTimeZone(yesterday, IST, "yyyy-MM-dd");
+}
+
+/**
  * Format a UTC timestamp (Date or ISO string) for display in IST.
  * Default format: "12 Mar 2024".
  */
