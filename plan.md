@@ -9,15 +9,18 @@
 A web-based SaaS that replaces the paper register and Excel sheets used by Indian gyms. Targets independent gyms and small chains. Architected to be extensible to yoga centres, boutique studios, and international markets, but **v1 ships only what gym operators need today**.
 
 ### Core Value Proposition
+
 1. **Stop revenue leakage from forgotten renewals** — automated tracking of expiring/expired memberships with one-click follow-ups.
 2. **Replace the paper register** — every member, every payment, every change, digitally captured and tamper-evident.
 3. **Recover lost members** — turn lapsed members into a named, actionable list (not a sad statistic).
 
 ### Pricing Tiers (target)
+
 - **Basic (~₹1,500–₹2,500/mo):** All core features, manual WhatsApp (click-to-send), CSV import, Excel exports.
 - **Pro (~₹5,000+/mo):** Adds WhatsApp Business API automation — automated renewal reminders with payment links, digital invoices to WhatsApp, lapsed member win-back campaigns.
 
 ### Out of Scope for v1 (deliberately)
+
 - Member-facing app or portal.
 - Personal Training (PT) tracking.
 - Body measurements / fitness tracking / workout plans.
@@ -34,15 +37,19 @@ A web-based SaaS that replaces the paper register and Excel sheets used by India
 ## 2. Personas
 
 ### Owner
+
 Runs the gym. May or may not be at the front desk daily. Cares about: total revenue, who hasn't paid, who's leaving, where money is leaking. Time-poor. Often non-technical. Will use the app on a laptop primarily, sometimes on phone.
 
 ### Branch Manager (chains only)
+
 Runs one branch of a multi-branch gym. Same view as owner but scoped to their branch. Cannot see other branches or owner-only financial reports.
 
 ### Receptionist
+
 Front-desk operator. Uses the app 6–8 hours daily. Enrols members, takes payments, fields renewal queries. Should NOT see total revenue, cannot delete members, cannot edit past payments. Optimised for speed and keyboard use.
 
 ### Super Admin (you)
+
 Manages tenants (gyms). No public signup in v1 — gyms onboarded manually via CLI script.
 
 ---
@@ -50,6 +57,7 @@ Manages tenants (gyms). No public signup in v1 — gyms onboarded manually via C
 ## 3. Design Principles
 
 ### Product Principles
+
 1. **Solve the daily loop, not the org chart.** Every screen should answer "what do I do right now?" not "let me show you everything."
 2. **Speed is a feature.** Receptionists do 50 enrollments a day. Every saved keystroke is real money.
 3. **Don't trust the user, trust the audit log.** Anyone can edit anything they're allowed to edit, but everything is logged with before/after.
@@ -57,6 +65,7 @@ Manages tenants (gyms). No public signup in v1 — gyms onboarded manually via C
 5. **Soft-delete everything.** Gym data is forever data.
 
 ### UX Principles
+
 1. **Calm professional aesthetic.** Neutral grays + single blue accent. Generous whitespace. No emojis as functional UI. No gym-bro imagery.
 2. **Comfortable density by default.** Big touch targets. Dense mode only for the member list (toggle).
 3. **Today's View is home.** Not a chart-heavy dashboard. Actionable lists.
@@ -65,6 +74,7 @@ Manages tenants (gyms). No public signup in v1 — gyms onboarded manually via C
 6. **Optimistic UI for cheap actions.** Skeleton loaders for lists. Toasts for confirmations.
 
 ### Engineering Principles
+
 1. **Multi-tenancy at the database layer.** Every data table has `gym_id`. RLS policies enforced in Postgres, not just app code.
 2. **Money in paise (integer).** Never floats.
 3. **Phone numbers in E.164** (`+919876543210`). Always.
@@ -78,26 +88,29 @@ Manages tenants (gyms). No public signup in v1 — gyms onboarded manually via C
 
 ## 4. Tech Stack
 
-| Layer | Choice | Notes |
-|---|---|---|
-| Framework | Next.js 15 (App Router) + TypeScript | Server Components + Server Actions |
-| Styling | Tailwind v4 + shadcn/ui (new-york style) | Use `shadcn` CLI v4 |
-| Database | Supabase Postgres (region: ap-south-1, Mumbai) | RLS for tenancy |
-| Auth | Supabase Auth (email + password) | Owner/Manager/Receptionist roles |
-| ORM | Drizzle ORM | Migrations versioned in repo |
-| Validation | Zod | Form + API + server action schemas |
-| Forms | react-hook-form + @hookform/resolvers/zod | |
-| Client cache | TanStack Query | For interactive lists |
-| Dates | date-fns + date-fns-tz | IST display, UTC storage |
-| PDF | @react-pdf/renderer | Server-side invoice generation |
-| Excel export | xlsx (SheetJS) | Client-side |
-| Charts | Recharts | 2 charts only in v1 |
-| Toasts | Sonner (shadcn) | |
-| Icons | lucide-react | |
-| Deploy | Vercel (region: bom1) | |
-| Package manager | pnpm | |
+
+| Layer           | Choice                                         | Notes                              |
+| --------------- | ---------------------------------------------- | ---------------------------------- |
+| Framework       | Next.js 15 (App Router) + TypeScript           | Server Components + Server Actions |
+| Styling         | Tailwind v4 + shadcn/ui (new-york style)       | Use `shadcn` CLI v4                |
+| Database        | Supabase Postgres (region: ap-south-1, Mumbai) | RLS for tenancy                    |
+| Auth            | Supabase Auth (email + password)               | Owner/Manager/Receptionist roles   |
+| ORM             | Drizzle ORM                                    | Migrations versioned in repo       |
+| Validation      | Zod                                            | Form + API + server action schemas |
+| Forms           | react-hook-form + @hookform/resolvers/zod      |                                    |
+| Client cache    | TanStack Query                                 | For interactive lists              |
+| Dates           | date-fns + date-fns-tz                         | IST display, UTC storage           |
+| PDF             | @react-pdf/renderer                            | Server-side invoice generation     |
+| Excel export    | xlsx (SheetJS)                                 | Client-side                        |
+| Charts          | Recharts                                       | 2 charts only in v1                |
+| Toasts          | Sonner (shadcn)                                |                                    |
+| Icons           | lucide-react                                   |                                    |
+| Deploy          | Vercel (region: bom1)                          |                                    |
+| Package manager | pnpm                                           |                                    |
+
 
 ### Brand
+
 - **Primary accent:** Blue. Use Tailwind `blue-600` as base, `blue-700` for hover, `blue-50` for soft backgrounds.
 - **Neutrals:** zinc scale (zinc-50 to zinc-900).
 - **Success:** emerald-600. **Warning:** amber-500. **Danger:** red-600.
@@ -145,6 +158,7 @@ Manages tenants (gyms). No public signup in v1 — gyms onboarded manually via C
 ```
 
 ### Naming
+
 - Files: `kebab-case.ts`. React components: `PascalCase.tsx` (file matches export).
 - Server actions exported as named consts: `export async function createMember(input) {}`.
 - Schema tables: snake_case, plural (`members`, `audit_logs`).
@@ -157,19 +171,21 @@ Manages tenants (gyms). No public signup in v1 — gyms onboarded manually via C
 
 Modules are independently shippable. Complete one before starting the next. After each module, the app should deploy cleanly and the new functionality should be demoable end-to-end.
 
-| Phase | Module | Title |
-|---|---|---|
-| **Foundation** | 00 | Project scaffolding, conventions, deploy |
-| | 01 | Auth + multi-tenancy + RLS + roles |
-| **MVP Core** | 02 | Plans & Add-ons management |
-| | 03 | Member management |
-| | 04 | Enrollment & payment (revenue loop) |
-| | 05 | Today's View (home dashboard) |
-| **Polish** | 06 | Membership freeze |
-| | 07 | Reports & exports |
-| | 08 | Audit log viewer |
-| | 09 | PDF invoice generation |
-| **Pro Tier** | 10 | WhatsApp automation (Pro tier) |
+
+| Phase          | Module | Title                                    |
+| -------------- | ------ | ---------------------------------------- |
+| **Foundation** | 00     | Project scaffolding, conventions, deploy |
+|                | 01     | Auth + multi-tenancy + RLS + roles       |
+| **MVP Core**   | 02     | Plans & Add-ons management               |
+|                | 03     | Member management                        |
+|                | 04     | Enrollment & payment (revenue loop)      |
+|                | 05     | Today's View (home dashboard)            |
+| **Polish**     | 06     | Membership freeze                        |
+|                | 07     | Reports & exports                        |
+|                | 08     | Audit log viewer                         |
+|                | 09     | PDF invoice generation                   |
+| **Pro Tier**   | 10     | WhatsApp automation (Pro tier)           |
+
 
 **Sellable milestone: end of Module 05.** That's enough to put in front of a real gym owner and ask "would you pay for this?"
 
@@ -194,6 +210,7 @@ This project is built with Claude Code as the primary engineering pair. Conventi
 ## 8. Definition of Done (per module)
 
 A module is "done" when:
+
 - All acceptance criteria in its module file pass.
 - Drizzle migrations applied cleanly to a fresh DB.
 - RLS policies tested with two-tenant scenario (Tenant A cannot see Tenant B).
@@ -208,23 +225,35 @@ A module is "done" when:
 
 ## 9. Risks & Open Questions
 
-| Risk | Mitigation |
-|---|---|
-| WhatsApp Business API approval delays for gyms | Build manual `wa.me` flow first; Pro tier as add-on |
-| Receptionist resists software adoption | Optimise for speed + keyboard; minimum clicks per enrollment |
-| Data migration from Gymshim/competitors | CSV import is mandatory in v1 (Module 03) |
-| Gym owners share login (no proper RBAC) | Build RBAC from day 1 (Module 01); enforce in DB via RLS |
-| Vercel cold starts on India traffic | Use Edge runtime where possible; bom1 region; Supabase ap-south-1 |
-| Phone number duplicates across gyms | Phone unique-per-gym, not global |
+
+| Risk                                           | Mitigation                                                        |
+| ---------------------------------------------- | ----------------------------------------------------------------- |
+| WhatsApp Business API approval delays for gyms | Build manual `wa.me` flow first; Pro tier as add-on               |
+| Receptionist resists software adoption         | Optimise for speed + keyboard; minimum clicks per enrollment      |
+| Data migration from Gymshim/competitors        | CSV import is mandatory in v1 (Module 03)                         |
+| Gym owners share login (no proper RBAC)        | Build RBAC from day 1 (Module 01); enforce in DB via RLS          |
+| Vercel cold starts on India traffic            | Use Edge runtime where possible; bom1 region; Supabase ap-south-1 |
+| Phone number duplicates across gyms            | Phone unique-per-gym, not global                                  |
+
 
 ---
 
 ## 10. Future (post-v1) Considerations
 
 Not for now, but architectural decisions today should not block these:
+
 - Biometric integration (eSSL/Realtime/Mantra) — schema reserves space for `attendance_logs` table, member ID maps to biometric ID.
 - Multi-currency — `currency` column on `gyms` table, money columns store smallest unit (paise/cents).
 - Yoga/boutique studios — class-based memberships layered on top of plan-based memberships, not replacing.
 - PT module — `trainers` table, `pt_sessions` table, no impact on current schema.
 - Member app — read-only API endpoints first; member auth schema kept simple.
 - International — i18n via next-intl; date/money formatters already centralised.
+
+
+
+**A "Future module: AI insights layer" section** with:
+
+- Tier 1 (summarizer) sketched: 3-4 days, post-launch, Pro+ tier.
+- Tier 2 (analyst) sketched: 3-6 weeks, only after 50+ customers, separate premium tier.
+- Specific note: "Don't build until customers have asked for AI specifically. Rule-based anomaly system is 70% of perceived value."
+

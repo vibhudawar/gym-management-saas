@@ -40,3 +40,11 @@ select
   coalesce(f.actual_end_date, f.freeze_end_date) as effective_end_date
 from public.freezes f
 where f.deleted_at is null;
+
+-- ----------------------------------------------------------------------------
+-- Reports (Module 07): partial index for fast discount-leakage queries.
+-- ----------------------------------------------------------------------------
+
+create index if not exists memberships_discount_idx
+  on public.memberships (gym_id, created_at)
+  where discount_paise > 0 and deleted_at is null;
