@@ -424,3 +424,25 @@ create policy "freezes_tenant_update" on public.freezes
     gym_id = public.current_user_gym()
     and public.current_user_role() in ('owner', 'branch_manager')
   );
+
+-- ----- notifications -------------------------------------------------------
+alter table public.notifications enable row level security;
+
+drop policy if exists "notifications_tenant_select" on public.notifications;
+drop policy if exists "notifications_tenant_insert" on public.notifications;
+drop policy if exists "notifications_tenant_update" on public.notifications;
+
+-- Owner + manager + receptionist all read-able (receptionist sees their member's
+-- receipts but cannot resend — resend is gated server-side at the action layer).
+create policy "notifications_tenant_select" on public.notifications
+  for select to authenticated
+  using (gym_id = public.current_user_gym());
+
+create policy "notifications_tenant_insert" on public.notifications
+  for insert to authenticated
+  with check (gym_id = public.current_user_gym());
+
+create policy "notifications_tenant_update" on public.notifications
+  for update to authenticated
+  using (gym_id = public.current_user_gym())
+  with check (gym_id = public.current_user_gym());

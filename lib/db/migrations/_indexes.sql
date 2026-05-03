@@ -48,3 +48,11 @@ where f.deleted_at is null;
 create index if not exists memberships_discount_idx
   on public.memberships (gym_id, created_at)
   where discount_paise > 0 and deleted_at is null;
+
+-- ----------------------------------------------------------------------------
+-- Notifications (Module 11): partial index for the retry worker.
+-- ----------------------------------------------------------------------------
+
+create index if not exists notifications_retry_idx
+  on public.notifications (status, next_retry_at)
+  where status = 'pending';

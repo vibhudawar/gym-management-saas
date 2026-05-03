@@ -14,6 +14,7 @@ import { recordAudit } from "@/lib/auth/audit";
 import type { SessionContext } from "@/lib/auth/get-session";
 import type { Transaction } from "@/lib/db/types";
 import { allocateInvoiceNumber } from "./invoice-numbering";
+import { notifyEnrollmentOrRenewal } from "./notification-helpers";
 
 export type EnrollmentInput = {
   memberId: string;
@@ -397,6 +398,13 @@ export async function enroll(
 
   if (!result.ok) return result;
   await auditEnrollmentSuccess(result);
+
+  // Receipt to the member. Fire-and-forget — must not block the response or
+  // throw past the enrolment success boundary.
+  void notifyEnrollmentOrRenewal(result.membership, result.payment, {
+    isRenewal: !!input.previousMembershipId,
+  });
+
   return {
     ok: true,
     membershipId: result.membershipId,

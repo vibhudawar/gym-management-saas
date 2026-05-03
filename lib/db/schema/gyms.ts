@@ -4,6 +4,20 @@ import { z } from "zod";
 
 export const subscriptionTierEnum = pgEnum("subscription_tier", ["basic", "pro"]);
 
+export const notificationChannels = ["sms", "whatsapp", "sms+whatsapp"] as const;
+export type NotificationChannelConfig = (typeof notificationChannels)[number];
+export const notificationChannelEnum = pgEnum(
+  "notification_channel_config",
+  notificationChannels,
+);
+
+export const notificationProviders = ["stub", "msg91"] as const;
+export type NotificationProvider = (typeof notificationProviders)[number];
+export const notificationProviderEnum = pgEnum(
+  "notification_provider",
+  notificationProviders,
+);
+
 export const gyms = pgTable("gyms", {
   id: uuid("id")
     .primaryKey()
@@ -16,6 +30,16 @@ export const gyms = pgTable("gyms", {
   currency: text("currency").notNull().default("INR"),
   subscriptionTier: subscriptionTierEnum("subscription_tier").notNull().default("basic"),
   whatsappApiEnabled: boolean("whatsapp_api_enabled").notNull().default(false),
+  notificationChannel: notificationChannelEnum("notification_channel")
+    .notNull()
+    .default("sms"),
+  notificationProvider: notificationProviderEnum("notification_provider")
+    .notNull()
+    .default("stub"),
+  /** DLT-approved sender ID (e.g. "ZENITH"). Null until provider setup. */
+  senderId: text("sender_id"),
+  /** MSG91 WhatsApp template namespace; required only for Pro-tier WA sends. */
+  whatsappTemplateNamespace: text("whatsapp_template_namespace"),
   createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
   deletedAt: timestamp("deleted_at", { withTimezone: true }),
 });

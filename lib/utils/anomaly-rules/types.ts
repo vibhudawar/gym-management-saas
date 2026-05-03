@@ -54,4 +54,6 @@ export type AnomalyContext = {
   priorLapsedCount: number | null;
   /** Per-week net revenue across the current period; weeks Mon-Sun. */
   weeklyNetPaise: Array<{ weekStart: string; weekEnd: string; netPaise: number }>;
+  /** Number of `notifications` rows with status='failed' in the last 24 hours. */
+  failedNotifications24h: number;
 };

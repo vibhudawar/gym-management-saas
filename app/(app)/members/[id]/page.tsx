@@ -12,12 +12,14 @@ import { getCurrentFreeze } from "@/server/queries/freezes/get-current-freeze";
 import { getFreezesByMembership } from "@/server/queries/freezes/get-freezes-by-membership";
 import { getCurrentMembership } from "@/server/queries/memberships/get-current-membership";
 import { getMembershipHistory } from "@/server/queries/memberships/get-membership-history";
+import { listNotificationsByMember } from "@/server/queries/notifications/list-by-member";
 import { getPaymentsByMember } from "@/server/queries/payments/get-payments-by-member";
 import { CurrentMembershipCard } from "./_components/current-membership-card";
 import { FreezeHistoryCard } from "./_components/freeze-history-card";
 import { MemberActivityCard } from "./_components/member-activity-card";
 import { MemberDetailHeader } from "./_components/member-detail-header";
 import { MembershipHistoryCard } from "./_components/membership-history-card";
+import { NotificationsCard } from "./_components/notifications-card";
 import {
   MemberExtrasCard,
   MemberNotesCard,
@@ -54,12 +56,16 @@ export default async function MemberDetailPage({
 
   // Freeze data depends on the current membership id; do these in parallel
   // once we have it. Skipped entirely when there's no membership.
-  const [currentFreeze, freezeHistory] = current
+  // Notifications are member-scoped so they can run in parallel either way;
+  // we fetch 6 to know whether to show a "View all" link without a count
+  // query.
+  const [currentFreeze, freezeHistory, notificationsPreview] = current
     ? await Promise.all([
         getCurrentFreeze(current.id),
         getFreezesByMembership(current.id),
+        listNotificationsByMember(id, 6),
       ])
-    : [null, []];
+    : [null, [], await listNotificationsByMember(id, 6)];
 
   const isDeleted = member.deletedAt !== null;
 
@@ -125,6 +131,12 @@ export default async function MemberDetailPage({
             current={current}
           />
           <FreezeHistoryCard rows={freezeHistory} />
+          <NotificationsCard
+            memberId={member.id}
+            rows={notificationsPreview.slice(0, 5)}
+            hasMore={notificationsPreview.length > 5}
+            canResend={owner && !isDeleted}
+          />
           <Suspense fallback={<Skeleton className="h-32 rounded-xl" />}>
             <MemberActivityCard memberId={member.id} />
           </Suspense>

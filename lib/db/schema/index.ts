@@ -11,3 +11,4 @@ export * from "./payments";
 export * from "./invoice-sequences";
 export * from "./reminders";
 export * from "./freezes";
+export * from "./notifications";

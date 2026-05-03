@@ -57,6 +57,13 @@
       "when": 1777729663174,
       "tag": "0007_flowery_wallflower",
       "breakpoints": true
+    },
+    {
+      "idx": 8,
+      "version": "7",
+      "when": 1777839798435,
+      "tag": "0008_sturdy_the_renegades",
+      "breakpoints": true
     }
   ]
 }

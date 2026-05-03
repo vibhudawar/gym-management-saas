@@ -19,6 +19,7 @@ import {
   canCorrectMembership,
   type CorrectionLevel,
 } from "@/lib/auth/membership-permissions";
+import { notifyCorrection } from "./notification-helpers";
 
 export type CorrectMembershipInput = {
   membershipId: string;
@@ -322,6 +323,9 @@ export async function correctMembershipService(
       _meta: { level: result.level, reason, kind: "membership_correction" },
     },
   });
+
+  // Receipt — informs the member their enrolment was updated.
+  void notifyCorrection(result.after.membership, result.after.payment.invoiceNumber);
 
   return {
     ok: true,

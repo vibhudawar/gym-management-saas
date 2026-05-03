@@ -8,7 +8,7 @@ import {
   buildReminderTemplate,
   buildWhatsAppUrl,
   type ReminderTemplateKind,
-} from "@/lib/notifications/templates";
+} from "@/lib/notifications/whatsapp-reminders";
 import { recordReminder } from "@/server/actions/reminders/record-reminder";
 
 type Props = {

@@ -1,62 +1,157 @@
-import { formatCalendarDate } from "@/lib/utils/dates";
+import type {
+  NotificationEventType,
+  NotificationOutboundChannel,
+} from "@/lib/db/schema/notifications";
 
-export type ReminderTemplateKind = "expiring" | "expired";
+export type TemplateKey =
+  | "receipt_enrollment_v1"
+  | "receipt_renewal_v1"
+  | "receipt_refund_v1"
+  | "receipt_correction_v1"
+  | "receipt_cancellation_v1";
 
-export type ReminderTemplateInput = {
-  memberName: string;
-  planName: string;
-  endDate: string; // YYYY-MM-DD
-  daysFromToday: number; // negative for expired, positive for expiring
-  gymName: string;
-  branchName: string;
+export type TemplateVariables = Record<string, string>;
+
+export type Template = {
+  key: TemplateKey;
+  channel: NotificationOutboundChannel;
+  body: string;
+  requiredVars: string[];
 };
 
 /**
- * Deterministic, role-tagged WhatsApp message templates. Owner-customizable
- * later (deferred); v1 is hardcoded with name, plan, dates, and the gym /
- * branch interpolated server-side.
+ * v1 templates — English, India context. Receipt-style, short, no staff names,
+ * always with the invoice number. WhatsApp uses the same body string in v1
+ * (the stub provider doesn't differentiate); when the MSG91 provider goes
+ * live, its WhatsApp call will need the same content re-registered as a Meta
+ * template via MSG91's portal. Same body, different upload mechanism.
+ *
+ * Templates are versioned by suffix (`_v1`). Bump to `_v2` when the wording
+ * changes — never mutate `_v1` because old `notifications` rows reference
+ * their template_key for audit narrative.
  */
-export function buildReminderTemplate(
-  kind: ReminderTemplateKind,
-  input: ReminderTemplateInput,
-): string {
-  const firstName = input.memberName.trim().split(/\s+/)[0] ?? input.memberName;
-  const formattedEnd = formatCalendarDate(input.endDate);
+const ENROLMENT_BODY = `Hi {{member_name}}, your {{plan_name}} membership at {{gym_name}} is confirmed.
+Valid: {{start_date}} to {{end_date}}
+Amount: ₹{{amount}}
+Invoice: {{invoice_number}}
+Branch: {{branch_name}}
+Save this as your receipt.`;
 
-  if (kind === "expiring") {
-    const days = Math.max(0, input.daysFromToday);
-    const inDays =
-      days === 0
-        ? "today"
-        : days === 1
-          ? "tomorrow"
-          : `in ${days} days`;
-    return (
-      `Hi ${firstName}, this is a reminder that your ${input.planName} ` +
-      `membership at ${input.gymName} ends on ${formattedEnd} (${inDays}). ` +
-      `Please drop by to renew at your convenience. — ${input.gymName}, ${input.branchName}`
-    );
+const REFUND_BODY = `Hi {{member_name}}, a refund of ₹{{amount}} has been processed for invoice {{original_invoice}}.
+Refund invoice: {{refund_invoice}}
+Mode: {{payment_mode}}
+{{gym_name}}, {{branch_name}}`;
+
+const CORRECTION_BODY = `Hi {{member_name}}, your enrolment at {{gym_name}} was updated.
+Updated plan: {{plan_name}}
+Updated amount: ₹{{amount}}
+Valid: {{start_date}} to {{end_date}}
+Invoice: {{invoice_number}}
+{{branch_name}}`;
+
+const CANCELLATION_BODY = `Hi {{member_name}}, your {{plan_name}} membership at {{gym_name}} has been cancelled effective {{effective_date}}.
+{{#if refund_amount}}Refund of ₹{{refund_amount}} processed.{{/if}}
+{{branch_name}}`;
+
+const RECEIPT_REQUIRED = [
+  "member_name",
+  "plan_name",
+  "gym_name",
+  "branch_name",
+  "start_date",
+  "end_date",
+  "amount",
+  "invoice_number",
+];
+
+export const TEMPLATES: Template[] = [
+  // The same body powers SMS and WhatsApp in v1 — see file header.
+  ...(["sms", "whatsapp"] as const).flatMap((channel) => [
+    {
+      key: "receipt_enrollment_v1" as const,
+      channel,
+      body: ENROLMENT_BODY,
+      requiredVars: RECEIPT_REQUIRED,
+    },
+    {
+      key: "receipt_renewal_v1" as const,
+      channel,
+      body: ENROLMENT_BODY, // same content; differentiated by event_type
+      requiredVars: RECEIPT_REQUIRED,
+    },
+    {
+      key: "receipt_refund_v1" as const,
+      channel,
+      body: REFUND_BODY,
+      requiredVars: [
+        "member_name",
+        "amount",
+        "original_invoice",
+        "refund_invoice",
+        "payment_mode",
+        "gym_name",
+        "branch_name",
+      ],
+    },
+    {
+      key: "receipt_correction_v1" as const,
+      channel,
+      body: CORRECTION_BODY,
+      requiredVars: [
+        "member_name",
+        "gym_name",
+        "plan_name",
+        "amount",
+        "start_date",
+        "end_date",
+        "invoice_number",
+        "branch_name",
+      ],
+    },
+    {
+      key: "receipt_cancellation_v1" as const,
+      channel,
+      body: CANCELLATION_BODY,
+      requiredVars: [
+        "member_name",
+        "plan_name",
+        "gym_name",
+        "effective_date",
+        "branch_name",
+      ],
+    },
+  ]),
+];
+
+export function templateKeyFor(
+  event: NotificationEventType,
+): TemplateKey {
+  switch (event) {
+    case "enrollment":
+      return "receipt_enrollment_v1";
+    case "renewal":
+      return "receipt_renewal_v1";
+    case "refund":
+      return "receipt_refund_v1";
+    case "correction":
+      return "receipt_correction_v1";
+    case "cancellation":
+      return "receipt_cancellation_v1";
   }
-
-  const days = Math.max(0, -input.daysFromToday);
-  const ago =
-    days === 0
-      ? "today"
-      : days === 1
-        ? "yesterday"
-        : `${days} days ago`;
-  return (
-    `Hi ${firstName}, your ${input.planName} membership at ${input.gymName} ` +
-    `expired on ${formattedEnd} (${ago}). We'd love to have you back — drop ` +
-    `by anytime to renew. — ${input.gymName}, ${input.branchName}`
-  );
 }
 
-/**
- * Build a `wa.me` URL with a pre-filled message. Phone is E.164 with the
- * leading `+` stripped (wa.me's format).
- */
-export function buildWhatsAppUrl(phoneE164: string, message: string): string {
-  const phone = phoneE164.startsWith("+") ? phoneE164.slice(1) : phoneE164;
-  return `https://wa.me/${phone}?text=${encodeURIComponent(message)}`;
+export function findTemplate(
+  key: TemplateKey,
+  channel: NotificationOutboundChannel,
+): Template | undefined {
+  return TEMPLATES.find((t) => t.key === key && t.channel === channel);
 }
+
+export type EventTypeLabel = Record<NotificationEventType, string>;
+export const EVENT_TYPE_LABEL: EventTypeLabel = {
+  enrollment: "Enrolment receipt",
+  renewal: "Renewal receipt",
+  refund: "Refund receipt",
+  correction: "Update receipt",
+  cancellation: "Cancellation receipt",
+};

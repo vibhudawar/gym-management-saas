@@ -1,4 +1,5 @@
 import { detectDiscountLeakage } from "@/lib/utils/anomaly-rules/discount-leakage";
+import { detectFailedNotifications } from "@/lib/utils/anomaly-rules/failed-notifications";
 import { detectLargeDiscount } from "@/lib/utils/anomaly-rules/large-discount";
 import { detectMemberLoss } from "@/lib/utils/anomaly-rules/member-loss";
 import { detectRefundSpike } from "@/lib/utils/anomaly-rules/refund-spike";
@@ -19,6 +20,7 @@ const SEVERITY_RANK: Record<Anomaly["severity"], number> = {
 export function detectAnomalies(ctx: AnomalyContext): Anomaly[] {
   const rules = [
     detectRevenueDrop,
+    detectFailedNotifications,
     detectDiscountLeakage,
     detectLargeDiscount,
     detectRefundSpike,

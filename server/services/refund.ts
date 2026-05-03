@@ -5,6 +5,7 @@ import { payments, type PaymentMode } from "@/lib/db/schema/payments";
 import { recordAudit } from "@/lib/auth/audit";
 import type { SessionContext } from "@/lib/auth/get-session";
 import { allocateInvoiceNumber } from "./invoice-numbering";
+import { notifyRefund } from "./notification-helpers";
 
 export type RefundInput = {
   paymentId: string;
@@ -12,6 +13,13 @@ export type RefundInput = {
   reason: string;
   refundDate: string; // YYYY-MM-DD
   paymentMode: PaymentMode;
+  /**
+   * When true, skip the standalone refund receipt — the caller is
+   * responsible for sending its own combined message (e.g.,
+   * cancel-membership sends one cancellation receipt that already mentions
+   * the refund amount).
+   */
+  suppressNotification?: boolean;
 };
 
 export type RefundErrorCode =
@@ -174,17 +182,33 @@ export async function recordRefundService(
         requiresCancellationPrompt,
         membershipId: originalLocked.membershipId ?? null,
         _audit: refundRow,
+        _refundRow: refundRow,
+        _original: originalLocked,
       };
     })
     .then(async (result) => {
       if (result.ok) {
-        const r = result as typeof result & { _audit: unknown };
+        const r = result as typeof result & {
+          _audit: unknown;
+          _refundRow: typeof payments.$inferSelect;
+          _original: typeof payments.$inferSelect;
+        };
         await recordAudit({
           entityType: "payment",
           entityId: r.paymentId,
           action: "create",
           after: r._audit,
         });
+
+        if (!input.suppressNotification) {
+          // Receipt to the member. Fire-and-forget; never throws past here.
+          void notifyRefund(r._refundRow, r._original, {
+            id: r._original.memberId,
+            gymId: r._original.gymId,
+            branchId: r._original.branchId,
+          });
+        }
+
         return {
           ok: true as const,
           paymentId: r.paymentId,

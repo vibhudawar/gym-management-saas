@@ -386,6 +386,18 @@ async function fetchWeeklyNet(
   }));
 }
 
+async function fetchFailedNotifications24h(gymId: string): Promise<number> {
+  type Row = { cnt: number };
+  const rows = (await db.execute<Row>(sql`
+    select count(*)::int as cnt
+    from notifications
+    where gym_id = ${gymId}::uuid
+      and status = 'failed'
+      and updated_at >= now() - interval '24 hours'
+  `)) as unknown as Row[];
+  return rows[0] ? Number(rows[0].cnt) || 0 : 0;
+}
+
 async function fetchPriorLapsedCount(
   gymId: string,
   branchFilter: ReturnType<typeof sql>,
@@ -435,6 +447,7 @@ export async function getOverviewReport(
     mostActiveDow,
     weeklyNet,
     priorLapsedCount,
+    failedNotifications24h,
   ] = await Promise.all([
     fetchPeriodMetrics(session.gym.id, branchFilter, range),
     prior ? fetchPeriodMetrics(session.gym.id, branchFilter, prior) : Promise.resolve(null),
@@ -447,6 +460,7 @@ export async function getOverviewReport(
     fetchMostActiveDow(session.gym.id, branchFilter, range),
     fetchWeeklyNet(session.gym.id, branchFilter, range),
     prior ? fetchPriorLapsedCount(session.gym.id, branchFilter, prior) : Promise.resolve(null),
+    fetchFailedNotifications24h(session.gym.id),
   ]);
 
   const headlineDelta =
@@ -474,6 +488,7 @@ export async function getOverviewReport(
     lapsedCount: Number(current.lapsed_count) || 0,
     priorLapsedCount: priorLapsedCount,
     weeklyNetPaise: weeklyNet,
+    failedNotifications24h,
   };
 
   const anomalies = detectAnomalies(ctx);

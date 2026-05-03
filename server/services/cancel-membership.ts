@@ -7,6 +7,7 @@ import {
   recordRefundService,
   type RefundResult,
 } from "./refund";
+import { notifyCancellation } from "./notification-helpers";
 import { endActiveFreezesForCancellation } from "./unfreeze";
 import type { PaymentMode } from "@/lib/db/schema/payments";
 
@@ -158,8 +159,17 @@ export async function cancelMembershipService(
       paymentMode: input.refund.paymentMode,
       reason: `Cancellation refund — ${reason}`,
       refundDate: input.effectiveDate,
+      // Cancellation receipt covers it — see § 11.6.
+      suppressNotification: true,
     });
   }
+
+  // Single combined receipt — if a refund was issued as part of the cancellation
+  // we mention it in the same message rather than firing two.
+  void notifyCancellation(result.membership, {
+    effectiveDate: input.effectiveDate,
+    refundAmountPaise: input.refund?.amountPaise ?? null,
+  });
 
   return {
     ok: true,
