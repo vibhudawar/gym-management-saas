@@ -56,6 +56,7 @@ export async function togglePlanActive(
   await recordAudit({
     entityType: "plan",
     entityId: after.id,
+    branchId: null,
     action: "update",
     before,
     after,

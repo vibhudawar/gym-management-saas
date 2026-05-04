@@ -64,6 +64,7 @@ export async function restoreMember(id: string): Promise<RestoreMemberResult> {
     await recordAudit({
       entityType: "member",
       entityId: after.id,
+      branchId: after.branchId,
       action: "update",
       before,
       after,

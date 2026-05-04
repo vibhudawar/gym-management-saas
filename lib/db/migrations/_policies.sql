@@ -83,12 +83,20 @@ create policy "users_tenant_update" on public.users
 drop policy if exists "audit_logs_tenant_select" on public.audit_logs;
 drop policy if exists "audit_logs_tenant_insert" on public.audit_logs;
 
--- Receptionists must NOT see the audit log.
+-- Receptionists must NOT see the audit log. Branch managers see entries for
+-- their branch + entries with branch_id IS NULL (gym-level entities — UI
+-- filters those for them; RLS lets them through so cross-flow joins don't
+-- silently drop rows).
 create policy "audit_logs_tenant_select" on public.audit_logs
   for select to authenticated
   using (
     gym_id = public.current_user_gym()
     and public.current_user_role() in ('owner', 'branch_manager')
+    and (
+      public.current_user_role() = 'owner'
+      or branch_id is null
+      or branch_id = public.current_user_branch()
+    )
   );
 
 create policy "audit_logs_tenant_insert" on public.audit_logs

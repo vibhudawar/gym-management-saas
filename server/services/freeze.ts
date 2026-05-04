@@ -232,6 +232,7 @@ export async function createFreezeService(
   await recordAudit({
     entityType: "freeze",
     entityId: result.freeze.id,
+    branchId: result.freeze.branchId,
     action: "create",
     after: {
       ...result.freeze,

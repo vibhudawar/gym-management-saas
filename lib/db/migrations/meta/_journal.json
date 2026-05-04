@@ -64,6 +64,13 @@
       "when": 1777839798435,
       "tag": "0008_sturdy_the_renegades",
       "breakpoints": true
+    },
+    {
+      "idx": 9,
+      "version": "7",
+      "when": 1777893701935,
+      "tag": "0009_eager_demogoblin",
+      "breakpoints": true
     }
   ]
 }

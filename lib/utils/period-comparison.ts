@@ -24,6 +24,8 @@ export function getPreviousPeriod(range: DateRange): DateRange | null {
       return resolvePreset("yesterday");
     case "yesterday":
       return shiftCustom(range);
+    case "last_7_days":
+      return shiftCustom(range);
     case "this_week":
       return resolvePreset("last_week");
     case "last_week":

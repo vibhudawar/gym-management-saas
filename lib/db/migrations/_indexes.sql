@@ -56,3 +56,46 @@ create index if not exists memberships_discount_idx
 create index if not exists notifications_retry_idx
   on public.notifications (status, next_retry_at)
   where status = 'pending';
+
+-- ----------------------------------------------------------------------------
+-- Audit log (Module 08): branch-scoped index + idempotent backfill.
+-- Uses `where branch_id is null` guards so re-runs don't double-apply.
+-- ----------------------------------------------------------------------------
+
+create index if not exists audit_logs_branch_id_idx
+  on public.audit_logs (gym_id, branch_id, created_at desc)
+  where branch_id is not null;
+
+create index if not exists audit_logs_user_id_idx
+  on public.audit_logs (gym_id, user_id, created_at desc);
+
+create index if not exists audit_logs_action_idx
+  on public.audit_logs (gym_id, action, created_at desc);
+
+update public.audit_logs al
+  set branch_id = m.branch_id
+  from public.members m
+  where al.entity_type = 'member'
+    and al.entity_id = m.id
+    and al.branch_id is null;
+
+update public.audit_logs al
+  set branch_id = mb.branch_id
+  from public.memberships mb
+  where al.entity_type = 'membership'
+    and al.entity_id = mb.id
+    and al.branch_id is null;
+
+update public.audit_logs al
+  set branch_id = p.branch_id
+  from public.payments p
+  where al.entity_type = 'payment'
+    and al.entity_id = p.id
+    and al.branch_id is null;
+
+update public.audit_logs al
+  set branch_id = f.branch_id
+  from public.freezes f
+  where al.entity_type = 'freeze'
+    and al.entity_id = f.id
+    and al.branch_id is null;

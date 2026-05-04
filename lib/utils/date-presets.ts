@@ -10,6 +10,7 @@ export type DateRange = {
 export type DatePresetKey =
   | "today"
   | "yesterday"
+  | "last_7_days"
   | "this_week"
   | "last_week"
   | "this_month"
@@ -25,6 +26,7 @@ export const DATE_PRESETS: ReadonlyArray<{
 }> = [
   { key: "today", label: "Today" },
   { key: "yesterday", label: "Yesterday" },
+  { key: "last_7_days", label: "Last 7 days" },
   { key: "this_week", label: "This week" },
   { key: "last_week", label: "Last week" },
   { key: "this_month", label: "This month" },
@@ -120,6 +122,11 @@ export function resolvePreset(
     case "yesterday": {
       const y = addDays(today, -1);
       return { from: toIstIso(y), to: toIstIso(y) };
+    }
+    case "last_7_days": {
+      // Rolling 7 days inclusive of today: 6 days back → today.
+      const start = addDays(today, -6);
+      return { from: toIstIso(start), to: toIstIso(today) };
     }
     case "this_week": {
       const start = startOfWeekMonday(today);

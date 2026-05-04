@@ -31,6 +31,7 @@ export async function createAddOn(input: unknown): Promise<CreateAddOnResult> {
     await recordAudit({
       entityType: "addon",
       entityId: row.id,
+      branchId: null,
       action: "create",
       after: row,
     });

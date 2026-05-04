@@ -148,6 +148,7 @@ export async function updateMember(
     await recordAudit({
       entityType: "member",
       entityId: after.id,
+      branchId: after.branchId,
       action: "update",
       before,
       after,

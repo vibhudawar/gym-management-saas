@@ -143,6 +143,7 @@ export async function cancelMembershipService(
   await recordAudit({
     entityType: "membership",
     entityId: result.membership.id,
+    branchId: result.membership.branchId,
     action: "cancel",
     before: result.before,
     after: {

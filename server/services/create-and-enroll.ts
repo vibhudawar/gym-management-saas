@@ -218,6 +218,7 @@ export async function createMemberAndEnroll(
   await recordAudit({
     entityType: "member",
     entityId: outcome.member.id,
+    branchId: outcome.member.branchId,
     action: "create",
     after: outcome.member,
   });

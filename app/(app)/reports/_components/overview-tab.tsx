@@ -25,6 +25,8 @@ function priorLabel(range: DateRange): string {
       return "vs yesterday";
     case "yesterday":
       return "vs day before";
+    case "last_7_days":
+      return "vs previous 7 days";
     case "this_week":
       return "vs last week";
     case "last_week":

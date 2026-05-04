@@ -7,6 +7,7 @@ import {
   timestamp,
   uuid,
 } from "drizzle-orm/pg-core";
+import { branches } from "./branches";
 import { gyms } from "./gyms";
 import { users } from "./users";
 
@@ -17,6 +18,14 @@ export const auditLogs = pgTable(
     gymId: uuid("gym_id")
       .notNull()
       .references(() => gyms.id, { onDelete: "restrict" }),
+    /**
+     * Denormalized branch scope for fast filtering. Null for gym-level
+     * entities (plans, add-ons, gym profile) — Branch Manager RLS allows
+     * those through but the UI hides them. See § 8.2.
+     */
+    branchId: uuid("branch_id").references(() => branches.id, {
+      onDelete: "restrict",
+    }),
     userId: uuid("user_id")
       .notNull()
       .references(() => users.id, { onDelete: "restrict" }),

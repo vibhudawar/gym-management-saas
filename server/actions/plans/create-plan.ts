@@ -31,6 +31,7 @@ export async function createPlan(input: unknown): Promise<CreatePlanResult> {
     await recordAudit({
       entityType: "plan",
       entityId: row.id,
+      branchId: null, // plan is gym-level
       action: "create",
       after: row,
     });

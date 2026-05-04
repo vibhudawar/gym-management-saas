@@ -126,6 +126,7 @@ export async function importMembers(
         await recordAudit({
           entityType: "member",
           entityId: inserted.id,
+          branchId: inserted.branchId,
           action: "create",
           after: { ...inserted, source: "csv_import" },
         });
@@ -158,6 +159,7 @@ export async function importMembers(
           await recordAudit({
             entityType: "member",
             entityId: inserted.id,
+            branchId: inserted.branchId,
             action: "create",
             after: { ...inserted, source: "csv_import" },
           });

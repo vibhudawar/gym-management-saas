@@ -17,6 +17,7 @@ type Props = {
 const PRIOR_LABEL: Record<ReturnType<typeof inferPreset>, string> = {
   today: "vs yesterday",
   yesterday: "vs day before",
+  last_7_days: "vs previous 7 days",
   this_week: "vs last week",
   last_week: "vs week before",
   this_month: "vs last month",

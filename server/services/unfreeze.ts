@@ -233,6 +233,7 @@ export async function unfreezeEarlyService(
   await recordAudit({
     entityType: "freeze",
     entityId: result.after.id,
+    branchId: result.after.branchId,
     action: "cancel_early",
     before: result.before,
     after: {

@@ -59,6 +59,7 @@ export async function updateAddOn(
     await recordAudit({
       entityType: "addon",
       entityId: after.id,
+      branchId: null,
       action: "update",
       before,
       after,

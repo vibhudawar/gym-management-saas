@@ -139,16 +139,19 @@ export async function editPaymentService(
         ok: true as const,
         paymentId: after.id,
         _audit: { before, after },
+        _branchId: after.branchId,
       };
     })
     .then(async (result) => {
       if (result.ok) {
         const r = result as typeof result & {
           _audit: { before: unknown; after: unknown };
+          _branchId: string;
         };
         await recordAudit({
           entityType: "payment",
           entityId: r.paymentId,
+          branchId: r._branchId,
           action: "update",
           before: r._audit.before,
           after: r._audit.after,

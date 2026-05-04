@@ -56,6 +56,7 @@ export async function toggleAddOnActive(
   await recordAudit({
     entityType: "addon",
     entityId: after.id,
+    branchId: null,
     action: "update",
     before,
     after,

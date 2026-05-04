@@ -24,6 +24,12 @@ export type AuditEntityType =
 export type AuditInput = {
   entityType: AuditEntityType;
   entityId: string;
+  /**
+   * Denormalized branch scope for fast filtering. Null for gym-level
+   * entities (plan/addon/gym/user/branch). See § 8.2 for why we capture
+   * this at write-time instead of joining at read-time.
+   */
+  branchId: string | null;
   action: AuditAction;
   before?: unknown;
   after?: unknown;
@@ -59,6 +65,7 @@ export async function recordAudit(input: AuditInput): Promise<void> {
 
   await db.insert(auditLogs).values({
     gymId: session.gym.id,
+    branchId: input.branchId,
     userId: session.user.id,
     entityType: input.entityType,
     entityId: input.entityId,

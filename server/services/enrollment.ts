@@ -371,12 +371,14 @@ export async function auditEnrollmentSuccess(
   await recordAudit({
     entityType: "membership",
     entityId: result.membershipId,
+    branchId: result.membership.branchId,
     action: "create",
     after: result.membership,
   });
   await recordAudit({
     entityType: "payment",
     entityId: result.paymentId,
+    branchId: result.payment.branchId,
     action: "create",
     after: result.payment,
   });

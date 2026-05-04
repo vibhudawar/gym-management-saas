@@ -306,6 +306,7 @@ export async function correctMembershipService(
   await recordAudit({
     entityType: "membership",
     entityId: result.after.membership.id,
+    branchId: result.after.membership.branchId,
     action: "correction",
     before: result.before,
     after: {
@@ -316,6 +317,7 @@ export async function correctMembershipService(
   await recordAudit({
     entityType: "payment",
     entityId: result.after.payment.id,
+    branchId: result.after.payment.branchId,
     action: "correction",
     before: result.before.payment,
     after: {

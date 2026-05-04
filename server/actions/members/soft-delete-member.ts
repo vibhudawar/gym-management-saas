@@ -83,6 +83,7 @@ export async function softDeleteMember(
   await recordAudit({
     entityType: "member",
     entityId: after.id,
+    branchId: after.branchId,
     action: "delete",
     before,
     after: trimmedReason ? { ...after, deleteReason: trimmedReason } : after,

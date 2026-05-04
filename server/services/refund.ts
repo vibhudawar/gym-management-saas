@@ -196,6 +196,7 @@ export async function recordRefundService(
         await recordAudit({
           entityType: "payment",
           entityId: r.paymentId,
+          branchId: r._refundRow.branchId,
           action: "create",
           after: r._audit,
         });
