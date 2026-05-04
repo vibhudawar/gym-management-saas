@@ -1,0 +1,1 @@
+ALTER TABLE "gyms" ADD COLUMN "last_data_export_at" timestamp with time zone;

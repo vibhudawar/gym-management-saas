@@ -8,7 +8,8 @@ type AuditAction =
   | "delete"
   | "correction"
   | "cancel"
-  | "cancel_early";
+  | "cancel_early"
+  | "data_export";
 
 export type AuditEntityType =
   | "gym"

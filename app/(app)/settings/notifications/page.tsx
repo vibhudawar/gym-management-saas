@@ -1,7 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { Badge } from "@/components/ui/badge";
-import { PageHeader } from "@/components/layout/page-header";
 import { requireRole } from "@/lib/auth/get-session";
 import { EVENT_TYPE_LABEL } from "@/lib/notifications/templates";
 import { formatRelative } from "@/lib/utils/dates";
@@ -9,6 +8,7 @@ import {
   getNotificationStats,
   listRecentNotificationsByGym,
 } from "@/server/queries/notifications/list-recent-by-gym";
+import { ChannelSelector } from "./_components/channel-selector";
 import { TestMessageButton } from "./_components/test-message-button";
 
 export const metadata: Metadata = { title: "Notifications · Settings" };
@@ -27,17 +27,6 @@ const STATUS_TONE: Record<string, string> = {
   failed: "border-destructive/40 bg-destructive/5 text-destructive",
 };
 
-function ConfigRow({ label, value }: { label: string; value: React.ReactNode }) {
-  return (
-    <div className="border-border/50 grid grid-cols-1 gap-1 border-b py-3 last:border-0 sm:grid-cols-3">
-      <p className="text-muted-foreground text-xs font-medium uppercase tracking-wide">
-        {label}
-      </p>
-      <div className="sm:col-span-2 text-sm">{value}</div>
-    </div>
-  );
-}
-
 export default async function NotificationsSettingsPage() {
   const session = await requireRole("owner");
   const [recent, stats] = await Promise.all([
@@ -48,72 +37,71 @@ export default async function NotificationsSettingsPage() {
   const isPro = session.gym.subscriptionTier === "pro";
 
   return (
-    <div className="mx-auto w-full max-w-4xl space-y-6">
-      <PageHeader
-        title="Notifications"
-        description="Receipts that go out to members on every payment-affecting event."
-      />
+    <section className="space-y-6">
+      <header>
+        <h2 className="text-foreground text-lg font-semibold tracking-tight">
+          Notifications
+        </h2>
+        <p className="text-muted-foreground text-xs">
+          Receipts that go out to members on every payment-affecting event.
+        </p>
+      </header>
 
-      <section
+      <div
         data-slot="card"
-        className="bg-gradient-to-t from-primary/5 to-card text-card-foreground ring-foreground/10 dark:bg-card overflow-hidden rounded-xl px-5 py-3 ring-1 shadow-xs"
+        className="bg-gradient-to-t from-primary/5 to-card text-card-foreground ring-foreground/10 dark:bg-card rounded-xl p-5 ring-1 shadow-xs"
       >
-        <ConfigRow
-          label="Channel"
-          value={
-            <span className="space-x-2">
-              <Badge variant="outline">SMS</Badge>
-              {session.gym.notificationChannel.includes("whatsapp") ? (
-                <Badge variant="outline">WhatsApp</Badge>
-              ) : isPro ? (
-                <span className="text-muted-foreground text-xs">
-                  WhatsApp available — contact us to enable.
-                </span>
-              ) : (
-                <span className="text-muted-foreground text-xs">
-                  WhatsApp lands in Pro tier.
-                </span>
-              )}
-            </span>
-          }
+        <h3 className="text-foreground mb-3 text-sm font-semibold">Channel</h3>
+        <ChannelSelector
+          current={session.gym.notificationChannel}
+          isPro={isPro}
         />
-        <ConfigRow
-          label="Provider"
-          value={
-            <span className="font-mono text-xs uppercase">
-              {session.gym.notificationProvider}
-            </span>
-          }
-        />
-        <ConfigRow
-          label="Sender ID"
-          value={
-            session.gym.senderId ? (
+      </div>
+
+      <div
+        data-slot="card"
+        className="bg-gradient-to-t from-primary/5 to-card text-card-foreground ring-foreground/10 dark:bg-card rounded-xl p-5 ring-1 shadow-xs"
+      >
+        <h3 className="text-foreground mb-3 text-sm font-semibold">
+          Provider config
+        </h3>
+        <dl className="grid grid-cols-2 gap-x-4 gap-y-3 text-sm">
+          <dt className="text-muted-foreground text-xs uppercase tracking-wide">
+            Provider
+          </dt>
+          <dd className="font-mono text-xs uppercase">
+            {session.gym.notificationProvider}
+          </dd>
+          <dt className="text-muted-foreground text-xs uppercase tracking-wide">
+            Sender ID
+          </dt>
+          <dd>
+            {session.gym.senderId ? (
               <span className="font-mono text-xs">{session.gym.senderId}</span>
             ) : (
               <span className="text-muted-foreground text-xs">
-                Not configured. Required when switching to MSG91 — file DLT
-                registration to obtain one.
+                Not configured. DLT-approved sender required when switching to
+                MSG91 — file via support during launch.
               </span>
-            )
-          }
-        />
-        <div className="pt-3">
-          <TestMessageButton />
-          <p className="text-muted-foreground mt-1 text-xs">
-            Sends a fixed test payload to your own phone via the configured provider.
+            )}
+          </dd>
+        </dl>
+        <div className="mt-4 border-t pt-4">
+          <h4 className="text-foreground mb-2 text-sm font-medium">Test message</h4>
+          <p className="text-muted-foreground mb-3 text-xs">
+            Sends a fixed sample receipt to your own phone via the configured
+            provider. Useful at onboarding to verify the system works end-to-end.
           </p>
+          <TestMessageButton />
         </div>
-      </section>
+      </div>
 
-      <section
+      <div
         data-slot="card"
         className="bg-gradient-to-t from-primary/5 to-card text-card-foreground ring-foreground/10 dark:bg-card overflow-hidden rounded-xl ring-1 shadow-xs"
       >
         <header className="px-5 pt-4 pb-3">
-          <h2 className="text-foreground text-base font-semibold tracking-tight">
-            Last 7 days
-          </h2>
+          <h3 className="text-foreground text-sm font-semibold">Last 7 days</h3>
           <p className="text-muted-foreground text-xs">
             {stats.last7Days.total.toLocaleString("en-IN")} sent ·{" "}
             {stats.last7Days.delivered.toLocaleString("en-IN")} delivered ·{" "}
@@ -168,7 +156,7 @@ export default async function NotificationsSettingsPage() {
             ))}
           </ul>
         )}
-      </section>
-    </div>
+      </div>
+    </section>
   );
 }

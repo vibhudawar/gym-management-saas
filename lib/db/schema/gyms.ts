@@ -40,6 +40,8 @@ export const gyms = pgTable("gyms", {
   senderId: text("sender_id"),
   /** MSG91 WhatsApp template namespace; required only for Pro-tier WA sends. */
   whatsappTemplateNamespace: text("whatsapp_template_namespace"),
+  /** Most recent successful Settings → Data export run. Null until first export. */
+  lastDataExportAt: timestamp("last_data_export_at", { withTimezone: true }),
   createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
   deletedAt: timestamp("deleted_at", { withTimezone: true }),
 });
