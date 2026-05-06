@@ -72,12 +72,17 @@ export const payments = pgTable(
     deletedAt: timestamp("deleted_at", { withTimezone: true }),
   },
   (table) => [
-    index("payments_gym_date_idx").on(table.gymId, table.paymentDate),
-    index("payments_gym_branch_date_idx").on(
-      table.gymId,
-      table.branchId,
-      table.paymentDate,
-    ),
+    // Date-range scans drive the revenue / payments / today queries; every
+    // caller filters to `deleted_at IS NULL`, so a partial index excludes
+    // the soft-deleted rows from the structure entirely. Mirrors the
+    // pattern already used on `memberships_gym_end_date_idx` and the
+    // unique-invoice index below.
+    index("payments_gym_date_idx")
+      .on(table.gymId, table.paymentDate)
+      .where(sql`${table.deletedAt} is null`),
+    index("payments_gym_branch_date_idx")
+      .on(table.gymId, table.branchId, table.paymentDate)
+      .where(sql`${table.deletedAt} is null`),
     index("payments_membership_idx").on(table.membershipId),
     index("payments_member_date_idx").on(table.memberId, table.paymentDate),
     uniqueIndex("payments_invoice_unique")
