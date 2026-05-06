@@ -109,8 +109,11 @@ export async function updateBranchAction(input: unknown): Promise<Result> {
     before,
     after,
   });
+  // Rename only — the branch dropdown reads names from the cached session
+  // which refreshes on next nav. No layout-tree revalidate needed for this
+  // path. Create / deactivate / reactivate keep theirs because those
+  // membership changes affect the dropdown contents.
   revalidatePath("/settings/branches");
-  revalidatePath("/", "layout");
   return { ok: true };
 }
 
