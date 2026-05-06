@@ -7,7 +7,7 @@ import { db } from "@/lib/db";
 import { branches } from "@/lib/db/schema/branches";
 import { recordAudit } from "@/lib/auth/audit";
 import { requireRole } from "@/lib/auth/get-session";
-import { normalisePhone } from "@/lib/utils/phone";
+import { normalizeIndianPhone } from "@/lib/utils/phone";
 import { getBranchActiveCounts } from "@/server/queries/settings/get-branch-active-counts";
 
 const createInputSchema = z.object({
@@ -29,7 +29,7 @@ function normalisePhoneOrError(phone?: string):
   | { ok: true; phone: string | null }
   | { ok: false; error: string } {
   if (!phone || phone.trim().length === 0) return { ok: true, phone: null };
-  const normalised = normalisePhone(phone);
+  const normalised = normalizeIndianPhone(phone);
   if (!normalised) {
     return { ok: false, error: "Phone number must be a valid Indian mobile." };
   }

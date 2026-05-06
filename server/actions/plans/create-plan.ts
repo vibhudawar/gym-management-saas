@@ -5,6 +5,7 @@ import { db } from "@/lib/db";
 import { plans, planCreateSchema, type Plan } from "@/lib/db/schema/plans";
 import { requireRole } from "@/lib/auth/get-session";
 import { recordAudit } from "@/lib/auth/audit";
+import { isUniqueViolation } from "@/lib/db/errors";
 
 export type CreatePlanResult =
   | { ok: true; data: Plan }
@@ -49,13 +50,4 @@ export async function createPlan(input: unknown): Promise<CreatePlanResult> {
     console.error("createPlan failed", err);
     return { ok: false, error: "Could not save plan.", code: "internal" };
   }
-}
-
-function isUniqueViolation(err: unknown): boolean {
-  return (
-    typeof err === "object" &&
-    err !== null &&
-    "code" in err &&
-    (err as { code: string }).code === "23505"
-  );
 }

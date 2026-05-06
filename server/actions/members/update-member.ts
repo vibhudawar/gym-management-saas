@@ -7,6 +7,7 @@ import { branches } from "@/lib/db/schema/branches";
 import { members, memberUpdateSchema, type Member } from "@/lib/db/schema/members";
 import { recordAudit } from "@/lib/auth/audit";
 import { requireUser } from "@/lib/auth/get-session";
+import { isUniqueViolation } from "@/lib/db/errors";
 
 export type UpdateMemberResult =
   | { ok: true; data: Member }
@@ -168,13 +169,4 @@ export async function updateMember(
     console.error("updateMember failed", err);
     return { ok: false, error: "Could not update member.", code: "internal" };
   }
-}
-
-function isUniqueViolation(err: unknown): boolean {
-  return (
-    typeof err === "object" &&
-    err !== null &&
-    "code" in err &&
-    (err as { code: string }).code === "23505"
-  );
 }

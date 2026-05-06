@@ -6,6 +6,7 @@ import { db } from "@/lib/db";
 import { addOns, addOnUpdateSchema, type AddOn } from "@/lib/db/schema/add-ons";
 import { requireRole } from "@/lib/auth/get-session";
 import { recordAudit } from "@/lib/auth/audit";
+import { isUniqueViolation } from "@/lib/db/errors";
 
 export type UpdateAddOnResult =
   | { ok: true; data: AddOn }
@@ -78,13 +79,4 @@ export async function updateAddOn(
     console.error("updateAddOn failed", err);
     return { ok: false, error: "Could not save add-on.", code: "internal" };
   }
-}
-
-function isUniqueViolation(err: unknown): boolean {
-  return (
-    typeof err === "object" &&
-    err !== null &&
-    "code" in err &&
-    (err as { code: string }).code === "23505"
-  );
 }

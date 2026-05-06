@@ -12,12 +12,6 @@ export function todayIstIso(): string {
   return formatInTimeZone(new Date(), IST, "yyyy-MM-dd");
 }
 
-/** Yesterday's IST calendar date as YYYY-MM-DD. */
-export function yesterdayIstIso(): string {
-  const yesterday = new Date(Date.now() - 24 * 60 * 60 * 1000);
-  return formatInTimeZone(yesterday, IST, "yyyy-MM-dd");
-}
-
 /**
  * Format a UTC timestamp (Date or ISO string) for display in IST.
  * Default format: "12 Mar 2024".

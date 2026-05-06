@@ -4,6 +4,7 @@ import { memberships } from "@/lib/db/schema/memberships";
 import { payments, type PaymentMode } from "@/lib/db/schema/payments";
 import { recordAudit } from "@/lib/auth/audit";
 import type { SessionContext } from "@/lib/auth/get-session";
+import { MIN_REASON_CHARS } from "@/lib/constants/validation";
 import { allocateInvoiceNumber } from "./invoice-numbering";
 import { notifyRefund } from "./notification-helpers";
 
@@ -43,8 +44,6 @@ export type RefundResult =
       membershipId: string | null;
     }
   | { ok: false; code: RefundErrorCode; message: string };
-
-const MIN_REASON_CHARS = 10;
 
 export async function recordRefundService(
   session: SessionContext,

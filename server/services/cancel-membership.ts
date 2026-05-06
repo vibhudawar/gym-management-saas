@@ -3,6 +3,7 @@ import { db } from "@/lib/db";
 import { memberships } from "@/lib/db/schema/memberships";
 import { recordAudit } from "@/lib/auth/audit";
 import type { SessionContext } from "@/lib/auth/get-session";
+import { MIN_REASON_CHARS } from "@/lib/constants/validation";
 import { todayIstIso } from "@/lib/utils/dates";
 import {
   recordRefundService,
@@ -37,8 +38,6 @@ export type CancelMembershipResult =
       refund?: RefundResult;
     }
   | { ok: false; code: CancelMembershipErrorCode; message: string };
-
-const MIN_REASON_CHARS = 10;
 
 export async function cancelMembershipService(
   session: SessionContext,

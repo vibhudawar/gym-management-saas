@@ -19,6 +19,7 @@ import {
   canCorrectMembership,
   type CorrectionLevel,
 } from "@/lib/auth/membership-permissions";
+import { MIN_REASON_CHARS } from "@/lib/constants/validation";
 import { notifyCorrection } from "./notification-helpers";
 
 export type CorrectMembershipInput = {
@@ -44,8 +45,6 @@ export type CorrectMembershipErrorCode =
 export type CorrectMembershipResult =
   | { ok: true; membershipId: string; paymentId: string }
   | { ok: false; code: CorrectMembershipErrorCode; message: string };
-
-const MIN_REASON_CHARS = 10;
 
 function addDays(iso: string, days: number): string {
   const d = new Date(`${iso}T00:00:00Z`);

@@ -7,7 +7,7 @@ import { db } from "@/lib/db";
 import { users } from "@/lib/db/schema/users";
 import { recordAudit } from "@/lib/auth/audit";
 import { requireUser } from "@/lib/auth/get-session";
-import { normalisePhone } from "@/lib/utils/phone";
+import { normalizeIndianPhone } from "@/lib/utils/phone";
 
 const inputSchema = z.object({
   name: z.string().trim().min(2).max(80),
@@ -25,7 +25,7 @@ export async function updateAccount(input: unknown): Promise<Result> {
     };
   }
   const session = await requireUser();
-  const normalisedPhone = normalisePhone(parsed.data.phone);
+  const normalisedPhone = normalizeIndianPhone(parsed.data.phone);
   if (!normalisedPhone) {
     return { ok: false, error: "Phone must be a valid Indian mobile." };
   }

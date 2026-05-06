@@ -7,7 +7,7 @@ import { db } from "@/lib/db";
 import { branches } from "@/lib/db/schema/branches";
 import { gyms } from "@/lib/db/schema/gyms";
 import { users } from "@/lib/db/schema/users";
-import { normalisePhone } from "@/lib/utils/phone";
+import { normalizeIndianPhone } from "@/lib/utils/phone";
 
 /**
  * Default password for dev/testing when none is provided.
@@ -154,7 +154,7 @@ function parse(): Args {
 }
 
 async function runTenantMode(args: Extract<Args, { mode: "tenant" }>) {
-  const phone = normalisePhone(args.ownerPhone);
+  const phone = normalizeIndianPhone(args.ownerPhone);
   if (!phone) {
     throw new Error(
       `Invalid phone "${args.ownerPhone}" — expected E.164 or 10-digit Indian number`,
@@ -242,7 +242,7 @@ async function runTenantMode(args: Extract<Args, { mode: "tenant" }>) {
 }
 
 async function runStaffMode(args: Extract<Args, { mode: "staff" }>) {
-  const phone = normalisePhone(args.phone);
+  const phone = normalizeIndianPhone(args.phone);
   if (!phone) {
     throw new Error(`Invalid phone "${args.phone}" — expected E.164 or 10-digit Indian number`);
   }
@@ -341,7 +341,7 @@ async function runBranchMode(args: Extract<Args, { mode: "branch" }>) {
 
   let normalisedPhone: string | null = null;
   if (args.phone) {
-    normalisedPhone = normalisePhone(args.phone);
+    normalisedPhone = normalizeIndianPhone(args.phone);
     if (!normalisedPhone) {
       throw new Error(
         `Invalid phone "${args.phone}" — expected E.164 or 10-digit Indian number`,

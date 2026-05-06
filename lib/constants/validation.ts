@@ -15,3 +15,12 @@ export const GSTIN_PATTERN =
  * on receipts (`ZEN-2026-0042`).
  */
 export const INVOICE_PREFIX_PATTERN = /^[A-Z0-9-]{2,10}$/;
+
+/**
+ * Minimum length of the free-text "reason" field on destructive or
+ * audit-impacting actions: cancellations, refunds, freezes, unfreezes,
+ * corrections. Keeps the audit log meaningful — owners can't just type "ok".
+ *
+ * Adjust uniformly across all five services if the policy ever changes.
+ */
+export const MIN_REASON_CHARS = 10;

@@ -4,6 +4,7 @@ import { freezes, type Freeze } from "@/lib/db/schema/freezes";
 import { memberships } from "@/lib/db/schema/memberships";
 import { recordAudit } from "@/lib/auth/audit";
 import type { SessionContext } from "@/lib/auth/get-session";
+import { MIN_REASON_CHARS } from "@/lib/constants/validation";
 
 export type UnfreezeEarlyInput = {
   freezeId: string;
@@ -27,7 +28,6 @@ export type UnfreezeEarlyResult =
     }
   | { ok: false; code: UnfreezeEarlyErrorCode; message: string };
 
-const MIN_REASON_CHARS = 10;
 const MAX_REASON_CHARS = 500;
 const ISO_DATE = /^\d{4}-\d{2}-\d{2}$/;
 

@@ -5,7 +5,7 @@ export type NormalizedPhone = string; // E.164, e.g. "+919876543210"
 const E164_RE = /^\+[1-9]\d{6,14}$/;
 const INDIAN_MOBILE_PREFIX = /^[6-9]/;
 
-export function isE164(value: string): boolean {
+function isE164(value: string): boolean {
   return E164_RE.test(value);
 }
 
@@ -69,14 +69,6 @@ export function formatPhoneForDisplay(phone: NormalizedPhone): string {
 }
 
 /**
- * Last-N digits of an E.164 number — used for partial phone search.
- */
-export function lastDigits(phone: NormalizedPhone, n: number): string {
-  const digits = phone.replace(/\D/g, "");
-  return digits.slice(-Math.max(1, n));
-}
-
-/**
  * Zod schema that accepts any of the loose Indian phone formats and
  * normalises to E.164. Use this in form schemas instead of a raw regex.
  */
@@ -99,8 +91,3 @@ export const phoneSchemaOptional = z
     message: "Enter a valid 10-digit Indian mobile number",
   });
 
-/**
- * Backwards-compat alias kept for older callers (e.g. scripts/create-tenant.ts
- * pre-Module-03). New code should call `normalizeIndianPhone` directly.
- */
-export const normalisePhone = normalizeIndianPhone;
