@@ -3,6 +3,7 @@ import { db } from "@/lib/db";
 import { memberships } from "@/lib/db/schema/memberships";
 import { recordAudit } from "@/lib/auth/audit";
 import type { SessionContext } from "@/lib/auth/get-session";
+import { todayIstIso } from "@/lib/utils/dates";
 import {
   recordRefundService,
   type RefundResult,
@@ -59,7 +60,7 @@ export async function cancelMembershipService(
     };
   }
 
-  const today = new Date().toISOString().slice(0, 10);
+  const today = todayIstIso();
   if (input.effectiveDate > today) {
     return {
       ok: false,

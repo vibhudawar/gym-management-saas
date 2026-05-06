@@ -1,5 +1,6 @@
 import { z } from "zod";
 import { memberGenders } from "@/lib/db/schema/members";
+import { todayIstIso } from "@/lib/utils/dates";
 import { normalizeIndianPhone } from "@/lib/utils/phone";
 
 export const IMPORT_COLUMNS = [
@@ -110,10 +111,6 @@ function parseGender(
   return GENDER_ALIASES[key] ?? null;
 }
 
-function todayIso(): string {
-  return new Date().toISOString().slice(0, 10);
-}
-
 export type ValidationSummary = {
   total: number;
   valid: number;
@@ -185,7 +182,7 @@ export function validateImportRows(
       messages.push(`${joinedParsed.warning} — using today's date`);
       warning = true;
     }
-    const joinedDate = joinedParsed.iso ?? todayIso();
+    const joinedDate = joinedParsed.iso ?? todayIstIso();
 
     const address = (raw.address ?? "").trim() || null;
     if (address && address.length > 500) {
