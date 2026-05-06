@@ -13,19 +13,12 @@ import {
 } from "@/components/ui/dropdown-menu";
 import type { CurrentMembership } from "@/server/queries/memberships/get-current-membership";
 import type { MemberPaymentRow } from "@/server/queries/payments/get-payments-by-member";
-import type { PaymentMode } from "@/lib/db/schema/payments";
+import { PAYMENT_MODE_LABELS } from "@/lib/constants/labels";
 import { formatCalendarDate } from "@/lib/utils/dates";
 import { formatMoney } from "@/lib/utils/money";
 import { cn } from "@/lib/utils";
 import { EditPaymentSheet } from "./edit-payment-sheet";
 import { RefundSheet } from "./refund-sheet";
-
-const MODE_LABEL: Record<PaymentMode, string> = {
-  cash: "Cash",
-  upi: "UPI",
-  card: "Card",
-  bank_transfer: "Bank",
-};
 
 type Props = {
   memberId: string;
@@ -89,7 +82,7 @@ export function RecentPaymentsCard({
                     ) : null}
                   </p>
                   <p className="text-muted-foreground text-xs">
-                    {formatCalendarDate(p.paymentDate)} · {MODE_LABEL[p.paymentMode]}
+                    {formatCalendarDate(p.paymentDate)} · {PAYMENT_MODE_LABELS[p.paymentMode]}
                     {p.receivedByName ? ` · by ${p.receivedByName}` : ""}
                   </p>
                 </div>

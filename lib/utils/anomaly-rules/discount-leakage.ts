@@ -1,3 +1,4 @@
+import { ANOMALY_THRESHOLDS } from "@/lib/constants/anomaly-thresholds";
 import { formatMoneyShort } from "@/lib/utils/money";
 import type { Anomaly, AnomalyContext } from "./types";
 
@@ -9,15 +10,17 @@ export function detectDiscountLeakage(ctx: AnomalyContext): Anomaly | null {
   if (ctx.grossPaise <= 0) return null;
   if (ctx.discountedCount === 0) return null;
   const pct = ctx.discountPaise / ctx.grossPaise;
-  if (pct < 0.08) return null;
-  const severity = pct >= 0.15 ? "high" : "medium";
+  if (pct < ANOMALY_THRESHOLDS.DISCOUNT_LEAKAGE_RATIO) return null;
+  const severity =
+    pct >= ANOMALY_THRESHOLDS.DISCOUNT_LEAKAGE_HIGH_SEVERITY_RATIO ? "high" : "medium";
   const pctLabel = `${(pct * 100).toFixed(1)}%`;
 
   let staffNote = "";
   if (
     ctx.topDiscountStaff &&
     ctx.discountPaise > 0 &&
-    ctx.topDiscountStaff.totalPaise / ctx.discountPaise > 0.5
+    ctx.topDiscountStaff.totalPaise / ctx.discountPaise >
+      ANOMALY_THRESHOLDS.DISCOUNT_LEAKAGE_TOP_STAFF_SHARE
   ) {
     const sharePct = Math.round(
       (ctx.topDiscountStaff.totalPaise / ctx.discountPaise) * 100,

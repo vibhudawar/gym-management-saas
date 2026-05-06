@@ -7,6 +7,7 @@ import {
   listPayments,
   type ListPaymentsInput,
 } from "@/server/queries/payments/list-payments";
+import { dateToIso } from "@/lib/utils/dates";
 import { formatMoney } from "@/lib/utils/money";
 import { paymentModes, type PaymentKind, type PaymentMode } from "@/lib/db/schema/payments";
 import { PaymentsFilters } from "./_components/payments-filters";
@@ -27,8 +28,8 @@ function defaultDateRange() {
   const now = new Date();
   const start = new Date(now.getFullYear(), now.getMonth(), 1);
   return {
-    from: start.toISOString().slice(0, 10),
-    to: now.toISOString().slice(0, 10),
+    from: dateToIso(start),
+    to: dateToIso(now),
   };
 }
 

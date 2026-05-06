@@ -1,3 +1,4 @@
+import { ANOMALY_THRESHOLDS } from "@/lib/constants/anomaly-thresholds";
 import { formatMoneyShort } from "@/lib/utils/money";
 import type { Anomaly, AnomalyContext } from "./types";
 
@@ -9,11 +10,12 @@ export function detectRevenueDrop(ctx: AnomalyContext): Anomaly | null {
   if (ctx.priorNetPaise === null) return null;
   if (ctx.priorNetPaise <= 0) return null;
   const ratio = ctx.netPaise / ctx.priorNetPaise;
-  if (ratio > 0.8) return null;
+  if (ratio > ANOMALY_THRESHOLDS.REVENUE_DROP_RATIO) return null;
   // Guard against tiny prior periods producing noisy alerts.
-  if (Math.abs(ctx.priorNetPaise) < 1_000_00) return null; // ₹1,000 minimum prior
+  if (Math.abs(ctx.priorNetPaise) < ANOMALY_THRESHOLDS.REVENUE_DROP_MIN_PRIOR_PAISE) return null;
 
-  const severity = ratio <= 0.6 ? "high" : "medium";
+  const severity =
+    ratio <= ANOMALY_THRESHOLDS.REVENUE_DROP_HIGH_SEVERITY_RATIO ? "high" : "medium";
   const pctDown = Math.round((1 - ratio) * 100);
   const params = new URLSearchParams({
     tab: "revenue",

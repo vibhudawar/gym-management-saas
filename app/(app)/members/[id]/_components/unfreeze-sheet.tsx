@@ -27,7 +27,12 @@ import {
   SheetTitle,
 } from "@/components/ui/sheet";
 import { Textarea } from "@/components/ui/textarea";
-import { formatCalendarDate } from "@/lib/utils/dates";
+import {
+  addDaysIso,
+  daysBetweenInclusiveIso,
+  formatCalendarDate,
+  todayIstIso,
+} from "@/lib/utils/dates";
 import { unfreezeEarlyAction } from "@/server/actions/freezes/unfreeze-early";
 
 const MIN_REASON = 10;
@@ -47,27 +52,6 @@ type Props = {
   membershipEndDate: string;
 };
 
-function todayIso(): string {
-  return new Date(
-    new Date().toLocaleString("en-US", { timeZone: "Asia/Kolkata" }),
-  )
-    .toISOString()
-    .slice(0, 10);
-}
-
-function addDaysIso(iso: string, days: number): string {
-  const d = new Date(`${iso}T00:00:00Z`);
-  d.setUTCDate(d.getUTCDate() + days);
-  return d.toISOString().slice(0, 10);
-}
-
-function daysBetweenInclusive(startIso: string, endIso: string): number {
-  if (endIso < startIso) return 0;
-  const s = new Date(`${startIso}T00:00:00Z`);
-  const e = new Date(`${endIso}T00:00:00Z`);
-  return Math.round((e.getTime() - s.getTime()) / 86_400_000) + 1;
-}
-
 export function UnfreezeSheet({
   open,
   onOpenChange,
@@ -77,7 +61,7 @@ export function UnfreezeSheet({
   freeze,
   membershipEndDate,
 }: Props) {
-  const today = todayIso();
+  const today = todayIstIso();
   const [unfreezeDate, setUnfreezeDate] = useState<string>(today);
   const [reason, setReason] = useState("");
   const [error, setError] = useState<string | null>(null);
@@ -94,7 +78,7 @@ export function UnfreezeSheet({
   const actualEndDate = useMemo(() => addDaysIso(unfreezeDate, -1), [unfreezeDate]);
   const daysUsed = useMemo(() => {
     if (actualEndDate < freeze.freezeStartDate) return 0;
-    return daysBetweenInclusive(freeze.freezeStartDate, actualEndDate);
+    return daysBetweenInclusiveIso(freeze.freezeStartDate, actualEndDate);
   }, [actualEndDate, freeze.freezeStartDate]);
   const daysSaved = Math.max(0, freeze.daysAdded - daysUsed);
   const newEndDate = useMemo(

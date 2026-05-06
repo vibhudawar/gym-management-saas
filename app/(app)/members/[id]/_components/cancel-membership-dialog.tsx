@@ -20,11 +20,10 @@ import { MoneyInput } from "@/components/shared/money-input";
 import { PaymentModeSelector } from "@/components/shared/payment-mode-selector";
 import type { CurrentMembership } from "@/server/queries/memberships/get-current-membership";
 import type { PaymentMode } from "@/lib/db/schema/payments";
-import { formatCalendarDate } from "@/lib/utils/dates";
+import { MIN_REASON_CHARS } from "@/lib/constants/validation";
+import { formatCalendarDate, todayIstIso } from "@/lib/utils/dates";
 import { formatMoney } from "@/lib/utils/money";
 import { cancelMembership } from "@/server/actions/memberships/cancel-membership";
-
-const MIN_REASON_CHARS = 10;
 
 type Props = {
   open: boolean;
@@ -36,10 +35,8 @@ type Props = {
   initialReason?: string;
 };
 
-function todayIso(): string {
-  return new Date().toISOString().slice(0, 10);
-}
-
+// daysBetween (non-inclusive) is distinct from `daysBetweenInclusiveIso` —
+// kept local because this dialog needs elapsed-days semantics.
 function daysBetween(fromIso: string, toIso: string): number {
   const a = new Date(`${fromIso}T00:00:00Z`);
   const b = new Date(`${toIso}T00:00:00Z`);
@@ -54,7 +51,7 @@ export function CancelMembershipDialog({
   primaryPayment,
   initialReason,
 }: Props) {
-  const [effectiveDate, setEffectiveDate] = useState<string>(todayIso());
+  const [effectiveDate, setEffectiveDate] = useState<string>(todayIstIso());
   const [reason, setReason] = useState("");
   const [issueRefund, setIssueRefund] = useState(false);
   const [refundAmount, setRefundAmount] = useState<number>(0);
@@ -65,7 +62,7 @@ export function CancelMembershipDialog({
   useEffect(() => {
     if (!open) return;
     // eslint-disable-next-line react-hooks/set-state-in-effect
-    setEffectiveDate(todayIso());
+    setEffectiveDate(todayIstIso());
     setReason(initialReason ?? "");
     setIssueRefund(false);
     setRefundAmount(0);
@@ -163,7 +160,7 @@ export function CancelMembershipDialog({
               id="cancel-effective"
               type="date"
               min={current.startDate}
-              max={todayIso()}
+              max={todayIstIso()}
               value={effectiveDate}
               onChange={(e) => setEffectiveDate(e.currentTarget.value)}
             />

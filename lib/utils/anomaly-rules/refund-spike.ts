@@ -1,3 +1,4 @@
+import { ANOMALY_THRESHOLDS } from "@/lib/constants/anomaly-thresholds";
 import { formatMoneyShort } from "@/lib/utils/money";
 import type { Anomaly, AnomalyContext } from "./types";
 
@@ -6,14 +7,18 @@ import type { Anomaly, AnomalyContext } from "./types";
  * Severity: high if >=5× prior OR refunds >10% of gross; medium otherwise.
  */
 export function detectRefundSpike(ctx: AnomalyContext): Anomaly | null {
-  if (ctx.refundCount < 2) return null;
+  if (ctx.refundCount < ANOMALY_THRESHOLDS.REFUND_SPIKE_MIN_REFUND_COUNT) return null;
   if (ctx.priorRefundsPaise === null || ctx.priorRefundCount === null) return null;
   if (ctx.priorRefundsPaise === 0) return null;
   const ratio = ctx.refundsPaise / ctx.priorRefundsPaise;
-  if (ratio < 3) return null;
+  if (ratio < ANOMALY_THRESHOLDS.REFUND_SPIKE_MULTIPLIER) return null;
 
   const pctOfGross = ctx.grossPaise > 0 ? ctx.refundsPaise / ctx.grossPaise : 0;
-  const severity = ratio >= 5 || pctOfGross > 0.1 ? "high" : "medium";
+  const severity =
+    ratio >= ANOMALY_THRESHOLDS.REFUND_SPIKE_HIGH_SEVERITY_MULTIPLIER ||
+    pctOfGross > ANOMALY_THRESHOLDS.REFUND_SPIKE_HIGH_SEVERITY_PCT_OF_GROSS
+      ? "high"
+      : "medium";
 
   const ratioRounded = Math.round(ratio * 10) / 10;
   const params = new URLSearchParams({

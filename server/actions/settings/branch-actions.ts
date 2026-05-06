@@ -7,34 +7,23 @@ import { db } from "@/lib/db";
 import { branches } from "@/lib/db/schema/branches";
 import { recordAudit } from "@/lib/auth/audit";
 import { requireRole } from "@/lib/auth/get-session";
-import { normalizeIndianPhone } from "@/lib/utils/phone";
+import { phoneSchemaOptional } from "@/lib/utils/phone";
 import { getBranchActiveCounts } from "@/server/queries/settings/get-branch-active-counts";
 
 const createInputSchema = z.object({
   name: z.string().trim().min(2).max(60),
   address: z.string().trim().max(500).optional(),
-  phone: z.string().trim().optional(),
+  phone: phoneSchemaOptional,
 });
 
 const updateInputSchema = z.object({
   branchId: z.string().uuid(),
   name: z.string().trim().min(2).max(60),
   address: z.string().trim().max(500).optional(),
-  phone: z.string().trim().optional(),
+  phone: phoneSchemaOptional,
 });
 
 type Result = { ok: true } | { ok: false; error: string; code?: string };
-
-function normalisePhoneOrError(phone?: string):
-  | { ok: true; phone: string | null }
-  | { ok: false; error: string } {
-  if (!phone || phone.trim().length === 0) return { ok: true, phone: null };
-  const normalised = normalizeIndianPhone(phone);
-  if (!normalised) {
-    return { ok: false, error: "Phone number must be a valid Indian mobile." };
-  }
-  return { ok: true, phone: normalised };
-}
 
 export async function createBranchAction(input: unknown): Promise<Result> {
   const parsed = createInputSchema.safeParse(input);
@@ -45,8 +34,6 @@ export async function createBranchAction(input: unknown): Promise<Result> {
     };
   }
   const session = await requireRole("owner");
-  const phone = normalisePhoneOrError(parsed.data.phone);
-  if (!phone.ok) return phone;
 
   const [created] = await db
     .insert(branches)
@@ -54,7 +41,7 @@ export async function createBranchAction(input: unknown): Promise<Result> {
       gymId: session.gym.id,
       name: parsed.data.name,
       address: parsed.data.address || null,
-      phone: phone.phone,
+      phone: parsed.data.phone,
     })
     .returning();
 
@@ -79,8 +66,6 @@ export async function updateBranchAction(input: unknown): Promise<Result> {
     };
   }
   const session = await requireRole("owner");
-  const phone = normalisePhoneOrError(parsed.data.phone);
-  if (!phone.ok) return phone;
 
   const [before] = await db
     .select()
@@ -96,7 +81,7 @@ export async function updateBranchAction(input: unknown): Promise<Result> {
     .set({
       name: parsed.data.name,
       address: parsed.data.address || null,
-      phone: phone.phone,
+      phone: parsed.data.phone,
     })
     .where(eq(branches.id, before.id))
     .returning();

@@ -1,7 +1,6 @@
+import { ANOMALY_THRESHOLDS } from "@/lib/constants/anomaly-thresholds";
 import { formatMoneyShort } from "@/lib/utils/money";
 import type { Anomaly, AnomalyContext } from "./types";
-
-const THRESHOLD = 0.25; // 25% off plan price
 
 /**
  * Trigger: any single membership has discount >=25% of its plan price.
@@ -11,7 +10,9 @@ const THRESHOLD = 0.25; // 25% off plan price
 export function detectLargeDiscount(ctx: AnomalyContext): Anomaly | null {
   const big = ctx.largeDiscountMemberships
     .filter(
-      (m) => m.planPricePaise > 0 && m.discountPaise / m.planPricePaise >= THRESHOLD,
+      (m) =>
+        m.planPricePaise > 0 &&
+        m.discountPaise / m.planPricePaise >= ANOMALY_THRESHOLDS.LARGE_DISCOUNT_RATIO,
     )
     .sort((a, b) => b.discountPaise - a.discountPaise);
 

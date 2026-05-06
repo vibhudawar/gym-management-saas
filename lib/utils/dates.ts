@@ -13,6 +13,41 @@ export function todayIstIso(): string {
 }
 
 /**
+ * Returns a Date's calendar date as YYYY-MM-DD using its UTC value. Use this
+ * when `d` is the result of UTC date arithmetic — e.g. `addDaysIso` builds
+ * its Dates as `new Date(\`${iso}T00:00:00Z\`)` + setUTCDate, and the caller
+ * needs the resulting ISO. For "today" anchored to IST, prefer `todayIstIso()`.
+ */
+export function dateToIso(d: Date): string {
+  return d.toISOString().slice(0, 10);
+}
+
+/**
+ * Add N days to a YYYY-MM-DD ISO date string and return YYYY-MM-DD. Pure
+ * calendar arithmetic via UTC midnight — no DST or timezone shenanigans.
+ */
+export function addDaysIso(iso: string, days: number): string {
+  const d = new Date(`${iso}T00:00:00Z`);
+  d.setUTCDate(d.getUTCDate() + days);
+  return d.toISOString().slice(0, 10);
+}
+
+/**
+ * Inclusive day count between two YYYY-MM-DD strings (both ends counted as
+ * calendar days). `startIso === endIso` returns 1. Returns 0 when endIso is
+ * before startIso, so callers don't need their own guard.
+ */
+export function daysBetweenInclusiveIso(
+  startIso: string,
+  endIso: string,
+): number {
+  if (endIso < startIso) return 0;
+  const start = new Date(`${startIso}T00:00:00Z`);
+  const end = new Date(`${endIso}T00:00:00Z`);
+  return Math.round((end.getTime() - start.getTime()) / 86_400_000) + 1;
+}
+
+/**
  * Format a UTC timestamp (Date or ISO string) for display in IST.
  * Default format: "12 Mar 2024".
  */

@@ -10,6 +10,7 @@ import {
   type MembershipStatusCounts,
 } from "@/server/queries/members/count-members-by-status";
 import { listPlans } from "@/server/queries/plans/list-plans";
+import { todayIstIso } from "@/lib/utils/dates";
 import { MembersFilters } from "./_components/members-filters";
 import { MembersListClient } from "./_components/members-list-client";
 import { MembersPageActions } from "./_components/members-page-actions";
@@ -125,7 +126,7 @@ export default async function MembersPage({
             defaultBranchId={defaultBranchId}
             canEdit={canEdit}
             exportRows={result.rows}
-            exportFilenameStem={`members-${session.gym.name.toLowerCase().replace(/\s+/g, "-")}-${new Date().toISOString().slice(0, 10)}`}
+            exportFilenameStem={`members-${session.gym.name.toLowerCase().replace(/\s+/g, "-")}-${todayIstIso()}`}
             plans={plans}
             addOns={addOns}
           />

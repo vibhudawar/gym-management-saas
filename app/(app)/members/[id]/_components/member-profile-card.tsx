@@ -1,14 +1,7 @@
 import type { Member } from "@/lib/db/schema/members";
-import { memberGenders } from "@/lib/db/schema/members";
+import { GENDER_LABELS } from "@/lib/constants/labels";
 import { formatCalendarDate } from "@/lib/utils/dates";
 import { formatPhoneForDisplay } from "@/lib/utils/phone";
-
-const GENDER_LABELS: Record<(typeof memberGenders)[number], string> = {
-  male: "Male",
-  female: "Female",
-  other: "Other",
-  prefer_not_to_say: "Prefer not to say",
-};
 
 export function MemberProfileCard({ member }: { member: Member }) {
   return (

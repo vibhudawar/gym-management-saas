@@ -20,6 +20,7 @@ import {
   type CorrectionLevel,
 } from "@/lib/auth/membership-permissions";
 import { MIN_REASON_CHARS } from "@/lib/constants/validation";
+import { addDaysIso } from "@/lib/utils/dates";
 import { notifyCorrection } from "./notification-helpers";
 
 export type CorrectMembershipInput = {
@@ -45,12 +46,6 @@ export type CorrectMembershipErrorCode =
 export type CorrectMembershipResult =
   | { ok: true; membershipId: string; paymentId: string }
   | { ok: false; code: CorrectMembershipErrorCode; message: string };
-
-function addDays(iso: string, days: number): string {
-  const d = new Date(`${iso}T00:00:00Z`);
-  d.setUTCDate(d.getUTCDate() + days);
-  return d.toISOString().slice(0, 10);
-}
 
 export async function correctMembershipService(
   session: SessionContext,
@@ -231,7 +226,7 @@ export async function correctMembershipService(
         and ${freezes.deletedAt} is null
         and ${freezes.status} <> 'cancelled_early'
     `)) as unknown as Array<{ frozen_days: number }>;
-    const newEndDate = addDays(
+    const newEndDate = addDaysIso(
       before.startDate,
       planRow.durationDays + Number(frozenDays ?? 0),
     );

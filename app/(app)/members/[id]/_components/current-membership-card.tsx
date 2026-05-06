@@ -30,7 +30,7 @@ import type { AddOn } from "@/lib/db/schema/add-ons";
 import type { PaymentMode } from "@/lib/db/schema/payments";
 import { canCorrectMembership } from "@/lib/auth/membership-permissions";
 import { isManagerOrOwner, type Role } from "@/lib/auth/roles";
-import { formatCalendarDate } from "@/lib/utils/dates";
+import { addDaysIso, formatCalendarDate, todayIstIso } from "@/lib/utils/dates";
 import { formatMoney } from "@/lib/utils/money";
 import { CancelMembershipDialog } from "./cancel-membership-dialog";
 import { CorrectionMarker } from "./correction-marker";
@@ -65,20 +65,13 @@ type Props = {
   } | null;
 };
 
+// daysBetween (non-inclusive elapsed days) is distinct from
+// `daysBetweenInclusiveIso`. Kept local for the same reason as in
+// cancel-membership-dialog.
 function daysBetween(fromIso: string, toIso: string): number {
   const a = new Date(`${fromIso}T00:00:00Z`);
   const b = new Date(`${toIso}T00:00:00Z`);
   return Math.round((b.getTime() - a.getTime()) / 86400000);
-}
-
-function todayIso(): string {
-  return new Date().toISOString().slice(0, 10);
-}
-
-function addDaysIso(iso: string, days: number): string {
-  const d = new Date(`${iso}T00:00:00Z`);
-  d.setUTCDate(d.getUTCDate() + days);
-  return d.toISOString().slice(0, 10);
 }
 
 export function CurrentMembershipCard({
@@ -131,7 +124,7 @@ export function CurrentMembershipCard({
     );
   }
 
-  const today = todayIso();
+  const today = todayIstIso();
   const daysToEnd = daysBetween(today, current.endDate);
 
   const renewEligible =

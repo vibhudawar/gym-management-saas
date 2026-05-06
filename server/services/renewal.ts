@@ -2,6 +2,7 @@ import { and, desc, eq, isNull } from "drizzle-orm";
 import { db } from "@/lib/db";
 import { memberships } from "@/lib/db/schema/memberships";
 import type { SessionContext } from "@/lib/auth/get-session";
+import { addDaysIso, todayIstIso } from "@/lib/utils/dates";
 import { enroll, type EnrollmentInput, type EnrollmentResult } from "./enrollment";
 
 export type StartMode = "from_today" | "from_previous_end" | "custom";
@@ -13,16 +14,6 @@ export type RenewalInput = Omit<
   startMode: StartMode;
   customStartDate?: string; // required when startMode = "custom"
 };
-
-function todayIso(): string {
-  return new Date().toISOString().slice(0, 10);
-}
-
-function addDays(iso: string, days: number): string {
-  const d = new Date(`${iso}T00:00:00Z`);
-  d.setUTCDate(d.getUTCDate() + days);
-  return d.toISOString().slice(0, 10);
-}
 
 export async function renew(
   session: SessionContext,
@@ -49,7 +40,7 @@ export async function renew(
   let startDate: string;
   switch (input.startMode) {
     case "from_today":
-      startDate = todayIso();
+      startDate = todayIstIso();
       break;
     case "from_previous_end":
       if (!previous) {
@@ -59,7 +50,7 @@ export async function renew(
           message: "No previous membership to extend from.",
         };
       }
-      startDate = addDays(previous.endDate, 1);
+      startDate = addDaysIso(previous.endDate, 1);
       break;
     case "custom":
       if (!input.customStartDate) {

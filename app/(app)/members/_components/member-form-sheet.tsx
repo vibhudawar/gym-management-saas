@@ -48,6 +48,8 @@ import type { Member } from "@/lib/db/schema/members";
 import type { Plan } from "@/lib/db/schema/plans";
 import { memberGenders } from "@/lib/db/schema/members";
 import { zodResolver } from "@/lib/forms/zod-resolver";
+import { GENDER_LABELS } from "@/lib/constants/labels";
+import { todayIstIso } from "@/lib/utils/dates";
 import {
   formatPhoneForDisplay,
   normalizeIndianPhone,
@@ -56,13 +58,6 @@ import { cn } from "@/lib/utils";
 import { checkPhoneAvailable } from "@/server/actions/members/check-phone";
 import { createMember } from "@/server/actions/members/create-member";
 import { updateMember } from "@/server/actions/members/update-member";
-
-const GENDER_LABELS: Record<(typeof memberGenders)[number], string> = {
-  male: "Male",
-  female: "Female",
-  other: "Other",
-  prefer_not_to_say: "Prefer not to say",
-};
 
 const GENDER_NONE = "_unset" as const;
 
@@ -98,10 +93,6 @@ type MemberFormSheetProps = {
   };
 };
 
-function todayIso(): string {
-  return new Date().toISOString().slice(0, 10);
-}
-
 function defaults(
   member: Member | null,
   fallbackBranchId: string,
@@ -114,7 +105,7 @@ function defaults(
       email: "",
       gender: GENDER_NONE,
       dob: "",
-      joinedDate: todayIso(),
+      joinedDate: todayIstIso(),
       emergencyContactName: "",
       emergencyContactPhone: "",
       address: "",
@@ -319,7 +310,7 @@ export function MemberFormSheet({
           setEnrollState({
             ...buildInitialEnrollmentState(enrollmentConfig),
             paymentMode: keepPaymentMode ?? "cash",
-            paymentDate: todayIso(),
+            paymentDate: todayIstIso(),
           });
         }
         // focus name input on next tick

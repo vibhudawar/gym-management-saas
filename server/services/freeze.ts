@@ -5,6 +5,11 @@ import { memberships } from "@/lib/db/schema/memberships";
 import { recordAudit } from "@/lib/auth/audit";
 import type { SessionContext } from "@/lib/auth/get-session";
 import { MIN_REASON_CHARS } from "@/lib/constants/validation";
+import {
+  addDaysIso,
+  daysBetweenInclusiveIso,
+  todayIstIso,
+} from "@/lib/utils/dates";
 
 export type CreateFreezeInput = {
   membershipId: string;
@@ -32,36 +37,6 @@ export type CreateFreezeResult =
 const MAX_REASON_CHARS = 500;
 
 const ISO_DATE = /^\d{4}-\d{2}-\d{2}$/;
-
-/**
- * Returns today's IST calendar date as YYYY-MM-DD. The DB applies the same
- * zone shift; this is the JS-side mirror used for client-bound validation.
- */
-function todayIstIso(): string {
-  return new Date(
-    new Date().toLocaleString("en-US", { timeZone: "Asia/Kolkata" }),
-  )
-    .toISOString()
-    .slice(0, 10);
-}
-
-/**
- * Inclusive day count between two YYYY-MM-DD strings.
- */
-function daysBetweenInclusive(startIso: string, endIso: string): number {
-  const start = new Date(`${startIso}T00:00:00Z`);
-  const end = new Date(`${endIso}T00:00:00Z`);
-  return Math.round((end.getTime() - start.getTime()) / 86_400_000) + 1;
-}
-
-/**
- * Adds N days to a YYYY-MM-DD string, returning a YYYY-MM-DD string.
- */
-function addDaysIso(iso: string, days: number): string {
-  const d = new Date(`${iso}T00:00:00Z`);
-  d.setUTCDate(d.getUTCDate() + days);
-  return d.toISOString().slice(0, 10);
-}
 
 /**
  * Freeze a membership for a date range. Locks the membership row, validates
@@ -194,7 +169,7 @@ export async function createFreezeService(
       };
     }
 
-    const daysAdded = daysBetweenInclusive(
+    const daysAdded = daysBetweenInclusiveIso(
       input.freezeStartDate,
       input.freezeEndDate,
     );

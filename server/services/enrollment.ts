@@ -13,6 +13,7 @@ import { plans } from "@/lib/db/schema/plans";
 import { recordAudit } from "@/lib/auth/audit";
 import type { SessionContext } from "@/lib/auth/get-session";
 import type { Transaction } from "@/lib/db/types";
+import { addDaysIso, todayIstIso } from "@/lib/utils/dates";
 import { allocateInvoiceNumber } from "./invoice-numbering";
 import { notifyEnrollmentOrRenewal } from "./notification-helpers";
 
@@ -71,17 +72,6 @@ function parseIsoDate(input: string): Date | null {
   return Number.isNaN(d.getTime()) ? null : d;
 }
 
-function addDays(iso: string, days: number): string {
-  const d = parseIsoDate(iso);
-  if (!d) throw new Error(`bad date: ${iso}`);
-  d.setUTCDate(d.getUTCDate() + days);
-  return d.toISOString().slice(0, 10);
-}
-
-function todayIso(): string {
-  return new Date().toISOString().slice(0, 10);
-}
-
 /**
  * Pre-flight validation that doesn't need DB access. Use this before opening
  * a transaction so we can fail fast on bad input without acquiring locks.
@@ -113,7 +103,7 @@ export function validateEnrollmentInput(
       message: "Payment date must be YYYY-MM-DD.",
     };
   }
-  const todayDate = parseIsoDate(todayIso())!;
+  const todayDate = parseIsoDate(todayIstIso())!;
   const oldestAllowed = new Date(todayDate);
   oldestAllowed.setUTCDate(oldestAllowed.getUTCDate() - MAX_BACKDATE_DAYS);
   if (paymentDate < oldestAllowed || paymentDate > todayDate) {
@@ -157,7 +147,7 @@ export async function enrollWithinTx(
   input: EnrollmentInput,
   options: { skipMemberCheck?: boolean } = {},
 ): Promise<EnrollmentTxResult> {
-  const today = todayIso();
+  const today = todayIstIso();
 
   if (!options.skipMemberCheck) {
     const [memberRow] = await tx
@@ -297,7 +287,7 @@ export async function enrollWithinTx(
     };
   }
 
-  const endDate = addDays(input.startDate, planRow.durationDays);
+  const endDate = addDaysIso(input.startDate, planRow.durationDays);
 
   const [membershipRow] = await tx
     .insert(memberships)

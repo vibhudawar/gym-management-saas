@@ -11,17 +11,10 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import type { PaymentRow } from "@/server/queries/payments/list-payments";
-import type { PaymentMode } from "@/lib/db/schema/payments";
+import { PAYMENT_MODE_LABELS } from "@/lib/constants/labels";
 import { formatCalendarDate } from "@/lib/utils/dates";
 import { formatMoney } from "@/lib/utils/money";
 import { cn } from "@/lib/utils";
-
-const MODE_LABEL: Record<PaymentMode, string> = {
-  cash: "Cash",
-  upi: "UPI",
-  card: "Card",
-  bank_transfer: "Bank",
-};
 
 type Props = {
   rows: PaymentRow[];
@@ -78,7 +71,7 @@ export function PaymentsTable({ rows, showBranch, showReceivedBy }: Props) {
                   {p.planName}
                 </TableCell>
                 <TableCell className="text-sm">
-                  {MODE_LABEL[p.paymentMode]}
+                  {PAYMENT_MODE_LABELS[p.paymentMode]}
                 </TableCell>
                 {showBranch ? (
                   <TableCell>

@@ -1,3 +1,4 @@
+import { ANOMALY_THRESHOLDS } from "@/lib/constants/anomaly-thresholds";
 import { formatMoneyShort } from "@/lib/utils/money";
 import { formatRangeLabel } from "@/lib/utils/date-presets";
 import type { Anomaly, AnomalyContext } from "./types";
@@ -21,7 +22,7 @@ export function detectSlowWeek(ctx: AnomalyContext): Anomaly | null {
   const slowest = [...ctx.weeklyNetPaise].sort(
     (a, b) => a.netPaise - b.netPaise,
   )[0];
-  if (slowest.netPaise / avg > 0.6) return null;
+  if (slowest.netPaise / avg > ANOMALY_THRESHOLDS.SLOW_WEEK_RATIO) return null;
 
   return {
     id: "slow-week",

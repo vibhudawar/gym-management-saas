@@ -8,6 +8,7 @@ import {
 import { recordAudit } from "@/lib/auth/audit";
 import type { SessionContext } from "@/lib/auth/get-session";
 import { db } from "@/lib/db";
+import { todayIstIso } from "@/lib/utils/dates";
 import {
   auditEnrollmentSuccess,
   enrollWithinTx,
@@ -157,7 +158,7 @@ export async function createMemberAndEnroll(
           emergencyContactName: data.emergencyContactName ?? null,
           emergencyContactPhone: data.emergencyContactPhone ?? null,
           notes: data.notes ?? null,
-          joinedDate: data.joinedDate ?? new Date().toISOString().slice(0, 10),
+          joinedDate: data.joinedDate ?? todayIstIso(),
           createdByUserId: session.user.id,
         })
         .returning();

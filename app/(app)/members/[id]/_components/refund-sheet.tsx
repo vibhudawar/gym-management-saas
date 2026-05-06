@@ -40,7 +40,7 @@ import { PaymentModeSelector } from "@/components/shared/payment-mode-selector";
 import type { CurrentMembership } from "@/server/queries/memberships/get-current-membership";
 import type { MemberPaymentRow } from "@/server/queries/payments/get-payments-by-member";
 import type { PaymentMode } from "@/lib/db/schema/payments";
-import { formatCalendarDate } from "@/lib/utils/dates";
+import { formatCalendarDate, todayIstIso } from "@/lib/utils/dates";
 import { formatMoney } from "@/lib/utils/money";
 import { recordRefund } from "@/server/actions/payments/record-refund";
 import { CancelMembershipDialog } from "./cancel-membership-dialog";
@@ -56,10 +56,6 @@ type Props = {
 
 const MIN_REASON = 10;
 
-function todayIso(): string {
-  return new Date().toISOString().slice(0, 10);
-}
-
 export function RefundSheet({
   open,
   onOpenChange,
@@ -69,7 +65,7 @@ export function RefundSheet({
 }: Props) {
   const [amountPaise, setAmountPaise] = useState<number>(0);
   const [mode, setMode] = useState<PaymentMode>("cash");
-  const [refundDate, setRefundDate] = useState<string>(todayIso());
+  const [refundDate, setRefundDate] = useState<string>(todayIstIso());
   const [reason, setReason] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [isPending, startTransition] = useTransition();
@@ -90,7 +86,7 @@ export function RefundSheet({
     // eslint-disable-next-line react-hooks/set-state-in-effect
     setAmountPaise(payment.amountPaise);
     setMode(payment.paymentMode);
-    setRefundDate(todayIso());
+    setRefundDate(todayIstIso());
     setReason("");
     setError(null);
     setPendingCancelPrompt(null);
@@ -200,7 +196,7 @@ export function RefundSheet({
             <Input
               id="refund-date"
               type="date"
-              max={todayIso()}
+              max={todayIstIso()}
               value={refundDate}
               onChange={(e) => setRefundDate(e.currentTarget.value)}
             />

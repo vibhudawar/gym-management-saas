@@ -1,3 +1,4 @@
+import { dateToIso } from "./dates";
 import {
   daysInRange,
   inferPreset,
@@ -58,8 +59,8 @@ function shiftCustom(range: DateRange): DateRange {
   const newFrom = new Date(newTo);
   newFrom.setUTCDate(newFrom.getUTCDate() - (days - 1));
   return {
-    from: newFrom.toISOString().slice(0, 10),
-    to: newTo.toISOString().slice(0, 10),
+    from: dateToIso(newFrom),
+    to: dateToIso(newTo),
   };
 }
 

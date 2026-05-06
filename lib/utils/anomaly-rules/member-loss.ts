@@ -1,3 +1,4 @@
+import { ANOMALY_THRESHOLDS } from "@/lib/constants/anomaly-thresholds";
 import type { Anomaly, AnomalyContext } from "./types";
 
 /**
@@ -7,10 +8,14 @@ import type { Anomaly, AnomalyContext } from "./types";
 export function detectMemberLoss(ctx: AnomalyContext): Anomaly | null {
   if (ctx.priorLapsedCount === null) return null;
   // Tiny-sample guard: ratio comparisons are noisy below this floor.
-  if (ctx.priorLapsedCount < 2) return null;
+  if (ctx.priorLapsedCount < ANOMALY_THRESHOLDS.MEMBER_LOSS_MIN_PRIOR_COUNT) return null;
   const ratio = ctx.lapsedCount / ctx.priorLapsedCount;
-  if (ratio < 1.5) return null;
-  const severity = ratio >= 3 && ctx.lapsedCount > 5 ? "high" : "medium";
+  if (ratio < ANOMALY_THRESHOLDS.MEMBER_LOSS_RATIO) return null;
+  const severity =
+    ratio >= ANOMALY_THRESHOLDS.MEMBER_LOSS_HIGH_SEVERITY_RATIO &&
+    ctx.lapsedCount > ANOMALY_THRESHOLDS.MEMBER_LOSS_HIGH_SEVERITY_MIN_COUNT
+      ? "high"
+      : "medium";
 
   return {
     id: "member-loss",

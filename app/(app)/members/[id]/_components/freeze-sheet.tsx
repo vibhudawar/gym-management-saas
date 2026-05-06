@@ -27,7 +27,12 @@ import {
   SheetTitle,
 } from "@/components/ui/sheet";
 import { Textarea } from "@/components/ui/textarea";
-import { formatCalendarDate } from "@/lib/utils/dates";
+import {
+  addDaysIso,
+  daysBetweenInclusiveIso,
+  formatCalendarDate,
+  todayIstIso,
+} from "@/lib/utils/dates";
 import { createFreezeAction } from "@/server/actions/freezes/create-freeze";
 
 const MIN_REASON = 10;
@@ -43,27 +48,6 @@ type Props = {
   pastFreezeCount: number;
 };
 
-function todayIso(): string {
-  return new Date(
-    new Date().toLocaleString("en-US", { timeZone: "Asia/Kolkata" }),
-  )
-    .toISOString()
-    .slice(0, 10);
-}
-
-function addDaysIso(iso: string, days: number): string {
-  const d = new Date(`${iso}T00:00:00Z`);
-  d.setUTCDate(d.getUTCDate() + days);
-  return d.toISOString().slice(0, 10);
-}
-
-function daysBetweenInclusive(startIso: string, endIso: string): number {
-  if (endIso < startIso) return 0;
-  const s = new Date(`${startIso}T00:00:00Z`);
-  const e = new Date(`${endIso}T00:00:00Z`);
-  return Math.round((e.getTime() - s.getTime()) / 86_400_000) + 1;
-}
-
 export function FreezeSheet({
   open,
   onOpenChange,
@@ -74,8 +58,8 @@ export function FreezeSheet({
   membershipEndDate,
   pastFreezeCount,
 }: Props) {
-  const [startDate, setStartDate] = useState<string>(todayIso());
-  const [endDate, setEndDate] = useState<string>(addDaysIso(todayIso(), 13));
+  const [startDate, setStartDate] = useState<string>(todayIstIso());
+  const [endDate, setEndDate] = useState<string>(addDaysIso(todayIstIso(), 13));
   const [reason, setReason] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [isPending, startTransition] = useTransition();
@@ -83,15 +67,15 @@ export function FreezeSheet({
   useEffect(() => {
     if (!open) return;
     // eslint-disable-next-line react-hooks/set-state-in-effect
-    setStartDate(todayIso());
-    setEndDate(addDaysIso(todayIso(), 13));
+    setStartDate(todayIstIso());
+    setEndDate(addDaysIso(todayIstIso(), 13));
     setReason("");
     setError(null);
   }, [open, membershipId]);
 
-  const today = todayIso();
+  const today = todayIstIso();
   const duration = useMemo(
-    () => daysBetweenInclusive(startDate, endDate),
+    () => daysBetweenInclusiveIso(startDate, endDate),
     [startDate, endDate],
   );
   const projectedEnd = useMemo(

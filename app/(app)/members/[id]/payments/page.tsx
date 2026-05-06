@@ -18,16 +18,9 @@ import { formatMoney } from "@/lib/utils/money";
 import { cn } from "@/lib/utils";
 import { getMember } from "@/server/queries/members/get-member";
 import { getPaymentsByMember } from "@/server/queries/payments/get-payments-by-member";
-import type { PaymentMode } from "@/lib/db/schema/payments";
+import { PAYMENT_MODE_LABELS } from "@/lib/constants/labels";
 
 export const metadata: Metadata = { title: "Payments" };
-
-const MODE_LABEL: Record<PaymentMode, string> = {
-  cash: "Cash",
-  upi: "UPI",
-  card: "Card",
-  bank_transfer: "Bank",
-};
 
 export default async function MemberPaymentsPage({
   params,
@@ -94,7 +87,7 @@ export default async function MemberPaymentsPage({
                   <TableCell className="text-muted-foreground">
                     {formatCalendarDate(p.paymentDate)}
                   </TableCell>
-                  <TableCell>{MODE_LABEL[p.paymentMode]}</TableCell>
+                  <TableCell>{PAYMENT_MODE_LABELS[p.paymentMode]}</TableCell>
                   <TableCell
                     className={cn(
                       "text-right tabular-nums font-medium",

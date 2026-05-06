@@ -5,6 +5,11 @@ import { memberships } from "@/lib/db/schema/memberships";
 import { recordAudit } from "@/lib/auth/audit";
 import type { SessionContext } from "@/lib/auth/get-session";
 import { MIN_REASON_CHARS } from "@/lib/constants/validation";
+import {
+  addDaysIso,
+  daysBetweenInclusiveIso,
+  todayIstIso,
+} from "@/lib/utils/dates";
 
 export type UnfreezeEarlyInput = {
   freezeId: string;
@@ -30,26 +35,6 @@ export type UnfreezeEarlyResult =
 
 const MAX_REASON_CHARS = 500;
 const ISO_DATE = /^\d{4}-\d{2}-\d{2}$/;
-
-function todayIstIso(): string {
-  return new Date(
-    new Date().toLocaleString("en-US", { timeZone: "Asia/Kolkata" }),
-  )
-    .toISOString()
-    .slice(0, 10);
-}
-
-function daysBetweenInclusive(startIso: string, endIso: string): number {
-  const start = new Date(`${startIso}T00:00:00Z`);
-  const end = new Date(`${endIso}T00:00:00Z`);
-  return Math.round((end.getTime() - start.getTime()) / 86_400_000) + 1;
-}
-
-function addDaysIso(iso: string, days: number): string {
-  const d = new Date(`${iso}T00:00:00Z`);
-  d.setUTCDate(d.getUTCDate() + days);
-  return d.toISOString().slice(0, 10);
-}
 
 /**
  * End a freeze before its scheduled end. Subtracts the unused days from the
@@ -170,7 +155,7 @@ export async function unfreezeEarlyService(
     const actualDaysUsed =
       actualEndDate < freeze.freezeStartDate
         ? 0
-        : daysBetweenInclusive(freeze.freezeStartDate, actualEndDate);
+        : daysBetweenInclusiveIso(freeze.freezeStartDate, actualEndDate);
     const daysToSubtract = freeze.daysAdded - actualDaysUsed;
 
     // Pull the membership for the end_date update, lock so a concurrent

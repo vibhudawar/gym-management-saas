@@ -13,6 +13,7 @@ import {
   YAxis,
 } from "recharts";
 import { formatMoney, formatMoneyShort } from "@/lib/utils/money";
+import { dateToIso } from "@/lib/utils/dates";
 import {
   chooseAggregation,
   daysInRange,
@@ -38,7 +39,7 @@ function startOfWeekIso(iso: string): string {
   const dow = d.getUTCDay(); // 0..6
   const offset = dow === 0 ? -6 : 1 - dow;
   d.setUTCDate(d.getUTCDate() + offset);
-  return d.toISOString().slice(0, 10);
+  return dateToIso(d);
 }
 
 function startOfMonthIso(iso: string): string {

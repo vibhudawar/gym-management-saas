@@ -7,11 +7,11 @@ import { db } from "@/lib/db";
 import { users } from "@/lib/db/schema/users";
 import { recordAudit } from "@/lib/auth/audit";
 import { requireUser } from "@/lib/auth/get-session";
-import { normalizeIndianPhone } from "@/lib/utils/phone";
+import { phoneSchema } from "@/lib/utils/phone";
 
 const inputSchema = z.object({
   name: z.string().trim().min(2).max(80),
-  phone: z.string().trim().min(1),
+  phone: phoneSchema,
 });
 
 type Result = { ok: true } | { ok: false; error: string };
@@ -25,10 +25,6 @@ export async function updateAccount(input: unknown): Promise<Result> {
     };
   }
   const session = await requireUser();
-  const normalisedPhone = normalizeIndianPhone(parsed.data.phone);
-  if (!normalisedPhone) {
-    return { ok: false, error: "Phone must be a valid Indian mobile." };
-  }
 
   const [before] = await db
     .select()
@@ -41,7 +37,7 @@ export async function updateAccount(input: unknown): Promise<Result> {
     .update(users)
     .set({
       name: parsed.data.name,
-      phone: normalisedPhone,
+      phone: parsed.data.phone,
     })
     .where(eq(users.id, session.user.id))
     .returning();

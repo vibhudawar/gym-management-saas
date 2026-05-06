@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { Badge } from "@/components/ui/badge";
 import type { PaymentMode } from "@/lib/db/schema/payments";
+import { PAYMENT_MODE_LABELS } from "@/lib/constants/labels";
 import { formatMoney } from "@/lib/utils/money";
 import { formatPhoneForDisplay } from "@/lib/utils/phone";
 import { cn } from "@/lib/utils";
@@ -16,13 +17,6 @@ type Props = {
   currentUserId: string;
   highlightOwnRows: boolean;
   todayIstIso: string;
-};
-
-const MODE_LABEL: Record<PaymentMode, string> = {
-  cash: "Cash",
-  upi: "UPI",
-  card: "Card",
-  bank_transfer: "Bank",
 };
 
 function formatTimeIst(isoTimestamp: Date | string): string {
@@ -112,7 +106,7 @@ export function EnrolledToday({
                       </p>
                       {row.paymentMode ? (
                         <p className="text-muted-foreground text-[10px]">
-                          {MODE_LABEL[row.paymentMode as PaymentMode] ??
+                          {PAYMENT_MODE_LABELS[row.paymentMode as PaymentMode] ??
                             row.paymentMode}
                         </p>
                       ) : null}

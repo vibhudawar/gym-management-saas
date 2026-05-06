@@ -81,12 +81,16 @@ export const phoneSchema = z
   });
 
 /**
- * Optional variant — accepts empty string / undefined and returns null.
+ * Optional variant — accepts empty string / undefined and returns
+ * `string | null`. Use this when the phone field on a Zod object schema is
+ * also `.optional()` at the column level (e.g. branch.phone, member.email
+ * companions). Yields null for both missing and blank input.
  */
 export const phoneSchemaOptional = z
   .string()
   .trim()
-  .transform((v) => (v === "" ? null : normalizeIndianPhone(v)))
+  .optional()
+  .transform((v) => (v === undefined || v === "" ? null : normalizeIndianPhone(v)))
   .refine((v) => v === null || E164_RE.test(v), {
     message: "Enter a valid 10-digit Indian mobile number",
   });

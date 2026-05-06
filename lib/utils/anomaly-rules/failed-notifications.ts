@@ -1,3 +1,4 @@
+import { ANOMALY_THRESHOLDS } from "@/lib/constants/anomaly-thresholds";
 import type { Anomaly, AnomalyContext } from "./types";
 
 /**
@@ -10,7 +11,10 @@ import type { Anomaly, AnomalyContext } from "./types";
  */
 export function detectFailedNotifications(ctx: AnomalyContext): Anomaly | null {
   if (ctx.failedNotifications24h <= 0) return null;
-  const severity = ctx.failedNotifications24h > 5 ? "high" : "medium";
+  const severity =
+    ctx.failedNotifications24h > ANOMALY_THRESHOLDS.FAILED_NOTIFICATIONS_HIGH_SEVERITY_COUNT
+      ? "high"
+      : "medium";
   return {
     id: "failed-notifications",
     severity,
