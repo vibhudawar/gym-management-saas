@@ -6,7 +6,10 @@ import { sendNotification } from "@/server/services/send-notification";
 const BATCH_SIZE = 50;
 
 /**
- * Vercel Cron worker. Runs every 5 minutes (configured in vercel.json).
+ * Vercel Cron worker. Runs once a day at 22:00 UTC = 03:30 IST (configured
+ * in vercel.json) — Hobby plan limits cron to daily cadence. Bump to
+ * `*\/5 * * * *` after upgrading to Pro so failed receipts retry within
+ * minutes instead of up to 24h.
  *
  * Picks up notifications whose `next_retry_at` has passed and re-attempts
  * them via `sendNotification`. Authorization is required — there's no
