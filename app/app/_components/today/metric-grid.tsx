@@ -82,7 +82,7 @@ export function MetricGrid({ snapshot, userRole }: Props) {
     return "All on hold";
   })();
 
-  const todayHref = `/payments?from=${todayIstIso()}&to=${todayIstIso()}`;
+  const todayHref = `/app/payments?from=${todayIstIso()}&to=${todayIstIso()}`;
 
   // Grid: 4 equal cards on desktop, 2-up on tablet, stack on mobile. Receptionist
   // hides revenue, leaving 3 cards which still flow neatly in 2 / 3 / stack.
@@ -115,7 +115,7 @@ export function MetricGrid({ snapshot, userRole }: Props) {
         footerHeadline={enrollmentHeadline}
         footerDirection={enrollmentDelta.direction}
         footerSubline={`Yesterday ${m.enrollmentsYesterday.toLocaleString("en-IN")}`}
-        href="/members?membership=active"
+        href="/app/members?membership=active"
       />
       <MetricCard
         label="Expiring in 14 days"
@@ -128,7 +128,7 @@ export function MetricGrid({ snapshot, userRole }: Props) {
             ? `${m.expiringIn7d} in 7d · ${m.expiringIn3d} in 3d`
             : "Next 14 days"
         }
-        href="/members?membership=expiring"
+        href="/app/members?membership=expiring"
       />
       <MetricCard
         label="Frozen now"
@@ -141,7 +141,7 @@ export function MetricGrid({ snapshot, userRole }: Props) {
             ? `${m.resumingIn7d} resuming in next 7 days`
             : "Currently on hold"
         }
-        href="/members?membership=frozen"
+        href="/app/members?membership=frozen"
       />
     </div>
   );

@@ -18,14 +18,14 @@ const COPY = {
   expiring: {
     title: "Expiring soon",
     subtitle: "Next 14 days",
-    showAllHref: "/members?membership=expiring",
+    showAllHref: "/app/members?membership=expiring",
     badge: "bg-amber-500 hover:bg-amber-500 text-white border-transparent",
     emptyMessage: "No memberships ending in the next 14 days.",
   },
   expired: {
     title: "Recently expired",
     subtitle: "Last 30 days",
-    showAllHref: "/members?membership=expired",
+    showAllHref: "/app/members?membership=expired",
     badge:
       "bg-destructive hover:bg-destructive text-white border-transparent",
     emptyMessage: "No expirations in the last 30 days.",

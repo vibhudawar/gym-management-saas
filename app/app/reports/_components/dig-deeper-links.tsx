@@ -22,7 +22,7 @@ export function DigDeeperLinks({ range }: Props) {
         {TARGETS.map((t) => (
           <li key={t.tab}>
             <Link
-              href={`/reports?tab=${t.tab}&from=${range.from}&to=${range.to}`}
+              href={`/app/reports?tab=${t.tab}&from=${range.from}&to=${range.to}`}
               className="text-primary inline-flex items-center gap-1 text-sm hover:underline"
             >
               <ArrowRight className="size-3.5" />

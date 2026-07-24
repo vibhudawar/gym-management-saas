@@ -11,7 +11,7 @@ import {
 } from "@/components/ui/select";
 import type { DateRange } from "@/lib/utils/date-presets";
 import { ROLE_LABEL, type Role } from "@/lib/auth/roles";
-import { DateRangePicker } from "@/app/(app)/reports/_components/date-range-picker";
+import { DateRangePicker } from "@/app/app/reports/_components/date-range-picker";
 
 type Props = {
   range: DateRange;

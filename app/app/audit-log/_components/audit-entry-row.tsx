@@ -49,7 +49,7 @@ const ACTION_VERB: Record<string, string> = {
 function entityLink(entityType: string, entityId: string): string | null {
   switch (entityType) {
     case "member":
-      return `/members/${entityId}`;
+      return `/app/members/${entityId}`;
     case "membership":
     case "freeze":
     case "payment":
@@ -58,7 +58,7 @@ function entityLink(entityType: string, entityId: string): string | null {
       return null;
     case "plan":
     case "addon":
-      return "/plans";
+      return "/app/plans";
     default:
       return null;
   }
@@ -132,7 +132,7 @@ export function AuditEntryRow({ entry }: Props) {
               </Link>
             ) : null}
             <Link
-              href={`/audit-log?entity_type=${entry.entityType}&entity_id=${entry.entityId}`}
+              href={`/app/audit-log?entity_type=${entry.entityType}&entity_id=${entry.entityId}`}
               className="inline-flex items-center gap-1 hover:underline"
             >
               All changes to this entity

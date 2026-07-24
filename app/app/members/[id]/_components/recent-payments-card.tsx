@@ -44,7 +44,7 @@ export function RecentPaymentsCard({
         </h2>
         {payments.length > 0 ? (
           <Link
-            href={`/members/${memberId}/payments`}
+            href={`/app/members/${memberId}/payments`}
             className="text-primary text-xs hover:underline"
           >
             View all →

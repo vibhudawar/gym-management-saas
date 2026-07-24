@@ -32,8 +32,8 @@ export async function editPayment(input: unknown): Promise<EditPaymentResult> {
   const session = await requireRole("owner");
   const result = await editPaymentService(session, parsed.data);
   if (result.ok) {
-    revalidatePath("/members");
-    revalidatePath("/payments");
+    revalidatePath("/app/members");
+    revalidatePath("/app/payments");
   }
   return result;
 }

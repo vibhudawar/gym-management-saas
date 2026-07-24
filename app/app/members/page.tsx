@@ -153,7 +153,7 @@ export default async function MembersPage({
           canRestore={owner}
           status={statusParam}
           hasFiltersApplied={filterApplied}
-          onClearFilters="/members"
+          onClearFilters="/app/members"
           plans={plans}
           addOns={addOns}
           sortBy={sortBy}

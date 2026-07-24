@@ -63,7 +63,7 @@ export function MembersFilters({
     const nextQuery = params.toString();
     const currentQuery = searchParams.toString();
     if (nextQuery === currentQuery) return;
-    router.replace(nextQuery ? `/members?${nextQuery}` : "/members");
+    router.replace(nextQuery ? `/app/members?${nextQuery}` : "/app/members");
   }
 
   function handleSearchChange(next: string) {

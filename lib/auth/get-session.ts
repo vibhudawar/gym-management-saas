@@ -124,6 +124,6 @@ export async function requireRole(
     throw new Error("requireRole called without a valid role list");
   }
   const session = await requireUser();
-  if (!roles.includes(session.user.role)) redirect("/");
+  if (!roles.includes(session.user.role)) redirect("/app");
   return session;
 }

@@ -28,7 +28,7 @@ export function detectLargeDiscount(ctx: AnomalyContext): Anomaly | null {
       headline: "Large discount given",
       subline: `${top.memberName} received ${topPct}% off their ${top.planName} (${formatMoneyShort(top.discountPaise)} discount)`,
       actionLabel: "View member",
-      actionHref: `/members/${top.memberId}`,
+      actionHref: `/app/members/${top.memberId}`,
     };
   }
 
@@ -38,6 +38,6 @@ export function detectLargeDiscount(ctx: AnomalyContext): Anomaly | null {
     headline: `${big.length} large discounts given`,
     subline: `${top.memberName} ${topPct}% off ${top.planName} (${formatMoneyShort(top.discountPaise)}) — and ${big.length - 1} more`,
     actionLabel: "View discount details",
-    actionHref: `/reports?tab=discounts&from=${ctx.range.from}&to=${ctx.range.to}`,
+    actionHref: `/app/reports?tab=discounts&from=${ctx.range.from}&to=${ctx.range.to}`,
   };
 }

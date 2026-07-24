@@ -42,9 +42,9 @@ export async function cancelMembership(
   const { memberId, ...payload } = parsed.data;
   const result = await cancelMembershipService(session, payload);
   if (result.ok) {
-    revalidatePath("/members");
-    revalidatePath("/payments");
-    if (memberId) revalidatePath(`/members/${memberId}`);
+    revalidatePath("/app/members");
+    revalidatePath("/app/payments");
+    if (memberId) revalidatePath(`/app/members/${memberId}`);
   }
   return result;
 }

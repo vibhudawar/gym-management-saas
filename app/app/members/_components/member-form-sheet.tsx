@@ -393,7 +393,7 @@ export function MemberFormSheet({
                               joined {duplicate.joinedDate}
                             </p>
                             <Link
-                              href={`/members/${duplicate.id}`}
+                              href={`/app/members/${duplicate.id}`}
                               className="text-primary text-xs font-medium hover:underline"
                               onClick={() => onOpenChange(false)}
                             >

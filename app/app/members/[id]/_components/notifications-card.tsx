@@ -47,7 +47,7 @@ export function NotificationsCard({ memberId, rows, hasMore, canResend }: Props)
         </h2>
         {hasMore ? (
           <Link
-            href={`/members/${memberId}/notifications`}
+            href={`/app/members/${memberId}/notifications`}
             className="text-primary inline-flex items-center gap-1 text-xs hover:underline"
           >
             View all

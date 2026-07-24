@@ -51,6 +51,6 @@ export async function updateAccount(input: unknown): Promise<Result> {
     after: { ...after, _meta: { event: "self_update" } },
   });
 
-  revalidatePath("/settings/account");
+  revalidatePath("/app/settings/account");
   return { ok: true };
 }

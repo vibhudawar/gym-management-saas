@@ -42,9 +42,9 @@ export async function renewMembership(input: unknown): Promise<EnrollmentResult>
     startMode: parsed.data.startMode as StartMode,
   });
   if (result.ok) {
-    revalidatePath("/members");
-    revalidatePath(`/members/${parsed.data.memberId}`);
-    revalidatePath("/payments");
+    revalidatePath("/app/members");
+    revalidatePath(`/app/members/${parsed.data.memberId}`);
+    revalidatePath("/app/payments");
   }
   return result;
 }

@@ -16,8 +16,8 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
- title: { default: "Gym Management", template: "%s · Gym Management" },
- description: "Multi-tenant gym management for the Indian market.",
+ title: { default: "GymOS", template: "%s · GymOS" },
+ description: "Gym management software for the Indian market.",
 };
 
 export default function RootLayout({
@@ -30,7 +30,7 @@ export default function RootLayout({
    lang="en"
    className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
   >
-   <body className="min-h-full flex flex-col">
+   <body className="min-h-full flex flex-col" suppressHydrationWarning>
     <QueryProvider>
      <TooltipProvider delayDuration={250}>{children}</TooltipProvider>
     </QueryProvider>

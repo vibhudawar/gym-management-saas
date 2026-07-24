@@ -62,6 +62,6 @@ export async function changePassword(input: unknown): Promise<Result> {
     },
   });
 
-  revalidatePath("/settings/account");
+  revalidatePath("/app/settings/account");
   return { ok: true };
 }

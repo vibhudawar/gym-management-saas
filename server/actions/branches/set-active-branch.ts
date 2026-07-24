@@ -35,7 +35,7 @@ export async function setActiveBranch(
 
   if (parsed.data.branchId === null) {
     cookieStore.delete(ACTIVE_BRANCH_COOKIE);
-    revalidatePath("/", "layout");
+    revalidatePath("/app", "layout");
     return { ok: true };
   }
 
@@ -63,6 +63,6 @@ export async function setActiveBranch(
     path: "/",
     maxAge: 60 * 60 * 24 * 365,
   });
-  revalidatePath("/", "layout");
+  revalidatePath("/app", "layout");
   return { ok: true };
 }

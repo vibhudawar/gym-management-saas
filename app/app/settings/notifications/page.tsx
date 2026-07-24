@@ -127,7 +127,7 @@ export default async function NotificationsSettingsPage() {
               >
                 <div className="col-span-5 min-w-0">
                   <Link
-                    href={`/members/${r.memberId}`}
+                    href={`/app/members/${r.memberId}`}
                     className="text-foreground truncate font-medium hover:underline"
                   >
                     {r.memberName ?? "(removed member)"}

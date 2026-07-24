@@ -75,10 +75,10 @@ export async function createMember(input: unknown): Promise<CreateMemberResult> 
     .where(eq(members.id, result.memberId))
     .limit(1);
 
-  revalidatePath("/members");
+  revalidatePath("/app/members");
   if (result.enrolled) {
-    revalidatePath(`/members/${result.memberId}`);
-    revalidatePath("/payments");
+    revalidatePath(`/app/members/${result.memberId}`);
+    revalidatePath("/app/payments");
   }
 
   return {

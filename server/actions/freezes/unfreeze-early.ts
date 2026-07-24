@@ -29,10 +29,10 @@ export async function unfreezeEarlyAction(
   const session = await requireRole("owner", "branch_manager");
   const result = await unfreezeEarlyService(session, parsed.data);
   if (result.ok) {
-    revalidatePath("/");
-    revalidatePath("/members");
+    revalidatePath("/app");
+    revalidatePath("/app/members");
     if (parsed.data.memberId) {
-      revalidatePath(`/members/${parsed.data.memberId}`);
+      revalidatePath(`/app/members/${parsed.data.memberId}`);
     }
   }
   return result;

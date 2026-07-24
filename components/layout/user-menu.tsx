@@ -51,7 +51,7 @@ export function UserMenu({ name, email, roleLabel }: UserMenuProps) {
         </DropdownMenuLabel>
         <DropdownMenuSeparator />
         <DropdownMenuItem asChild>
-          <Link href="/settings" className="cursor-pointer">
+          <Link href="/app/settings" className="cursor-pointer">
             <Settings className="size-4" />
             Settings
           </Link>

@@ -287,7 +287,7 @@ export function ImportWizard({
           </div>
         ) : null}
         <div className="flex items-center gap-2">
-          <Button onClick={() => router.push("/members")}>Go to members</Button>
+          <Button onClick={() => router.push("/app/members")}>Go to members</Button>
           <Button variant="outline" onClick={reset}>
             Import another file
           </Button>
@@ -462,7 +462,7 @@ export function ImportWizard({
     <div className="space-y-5">
       <div className="flex items-center gap-1">
         <Link
-          href="/members"
+          href="/app/members"
           className="text-muted-foreground hover:text-foreground inline-flex items-center gap-1 text-xs"
         >
           <ArrowLeft className="size-3.5" />

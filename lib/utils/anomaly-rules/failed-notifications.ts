@@ -21,6 +21,6 @@ export function detectFailedNotifications(ctx: AnomalyContext): Anomaly | null {
     headline: `${ctx.failedNotifications24h} ${ctx.failedNotifications24h === 1 ? "notification" : "notifications"} failed in last 24 hours`,
     subline: "Members may not have received their receipts.",
     actionLabel: "View notifications",
-    actionHref: "/settings/notifications",
+    actionHref: "/app/settings/notifications",
   };
 }

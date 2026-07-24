@@ -31,8 +31,8 @@ export async function recordRefund(input: unknown): Promise<RefundResult> {
   const session = await requireRole("owner");
   const result = await recordRefundService(session, parsed.data);
   if (result.ok) {
-    revalidatePath("/members");
-    revalidatePath("/payments");
+    revalidatePath("/app/members");
+    revalidatePath("/app/payments");
   }
   return result;
 }

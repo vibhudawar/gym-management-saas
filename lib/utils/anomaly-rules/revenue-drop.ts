@@ -29,6 +29,6 @@ export function detectRevenueDrop(ctx: AnomalyContext): Anomaly | null {
     headline: "Revenue down",
     subline: `${formatMoneyShort(ctx.netPaise)} this period vs ${formatMoneyShort(ctx.priorNetPaise)} last period (-${pctDown}%)`,
     actionLabel: "View revenue breakdown",
-    actionHref: `/reports?${params.toString()}`,
+    actionHref: `/app/reports?${params.toString()}`,
   };
 }

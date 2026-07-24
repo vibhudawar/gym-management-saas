@@ -54,7 +54,7 @@ export async function sendTestNotification(): Promise<Result> {
     whatsappTemplateNamespace: gym.whatsappTemplateNamespace,
   });
 
-  revalidatePath("/settings/notifications");
+  revalidatePath("/app/settings/notifications");
   if (!result.ok) return { ok: false, error: result.error };
   return { ok: true, channel };
 }

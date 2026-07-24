@@ -15,7 +15,7 @@ export default async function MembersImportPage() {
   ]);
 
   if (branches.length === 0) {
-    redirect("/members");
+    redirect("/app/members");
   }
 
   const defaultBranchId = session.activeBranch?.id ?? branches[0].id;

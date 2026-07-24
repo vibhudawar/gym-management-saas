@@ -181,7 +181,7 @@ export async function importMembers(
     }
   }
 
-  revalidatePath("/members");
+  revalidatePath("/app/members");
 
   return {
     ok: true,

@@ -7,7 +7,7 @@ export default async function AuthLayout({
   children: React.ReactNode;
 }) {
   const session = await getCurrentSession();
-  if (session) redirect("/");
+  if (session) redirect("/app");
   // Each auth page renders its own AuthSplit — the layout just gates access
   // so authenticated users can't land on the login screens.
   return <>{children}</>;

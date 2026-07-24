@@ -65,9 +65,9 @@ export async function resendNotification(input: unknown): Promise<Result> {
   });
 
   if (parsed.data.memberId) {
-    revalidatePath(`/members/${parsed.data.memberId}`);
-    revalidatePath(`/members/${parsed.data.memberId}/notifications`);
+    revalidatePath(`/app/members/${parsed.data.memberId}`);
+    revalidatePath(`/app/members/${parsed.data.memberId}/notifications`);
   }
-  revalidatePath("/settings/notifications");
+  revalidatePath("/app/settings/notifications");
   return { ok: true };
 }

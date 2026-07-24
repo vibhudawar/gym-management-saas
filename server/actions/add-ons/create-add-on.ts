@@ -37,7 +37,7 @@ export async function createAddOn(input: unknown): Promise<CreateAddOnResult> {
       after: row,
     });
 
-    revalidatePath("/plans");
+    revalidatePath("/app/plans");
     return { ok: true, data: row };
   } catch (err) {
     if (isUniqueViolation(err)) {

@@ -67,7 +67,7 @@ export function MemberDetailHeader({
         return;
       }
       toast.success(`${member.name} deleted`);
-      router.push("/members");
+      router.push("/app/members");
     });
   }
 
@@ -87,7 +87,7 @@ export function MemberDetailHeader({
     <div className="flex flex-wrap items-start justify-between gap-3 pb-4">
       <div className="space-y-2">
         <Link
-          href="/members"
+          href="/app/members"
           className="text-muted-foreground hover:text-foreground inline-flex items-center gap-1 text-xs"
         >
           <ArrowLeft className="size-3.5" />

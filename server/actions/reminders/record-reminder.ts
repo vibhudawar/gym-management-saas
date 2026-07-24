@@ -115,6 +115,6 @@ export async function recordReminder(input: unknown): Promise<Result> {
   });
 
   // Refresh today's view so the row's reminder indicator updates on next paint.
-  revalidatePath("/");
+  revalidatePath("/app");
   return { ok: true };
 }

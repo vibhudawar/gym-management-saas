@@ -1,6 +1,6 @@
 "use client";
 
-import { ReportExportButton } from "@/app/(app)/reports/_components/export-button";
+import { ReportExportButton } from "@/app/app/reports/_components/export-button";
 import type { AuditEntry } from "@/server/queries/audit-log/list-audit-entries";
 import { formatDate, formatDateTime } from "@/lib/utils/dates";
 import { ROLE_LABEL, type Role } from "@/lib/auth/roles";

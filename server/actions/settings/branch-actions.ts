@@ -52,8 +52,8 @@ export async function createBranchAction(input: unknown): Promise<Result> {
     action: "create",
     after: created,
   });
-  revalidatePath("/settings/branches");
-  revalidatePath("/", "layout");
+  revalidatePath("/app/settings/branches");
+  revalidatePath("/app", "layout");
   return { ok: true };
 }
 
@@ -98,7 +98,7 @@ export async function updateBranchAction(input: unknown): Promise<Result> {
   // which refreshes on next nav. No layout-tree revalidate needed for this
   // path. Create / deactivate / reactivate keep theirs because those
   // membership changes affect the dropdown contents.
-  revalidatePath("/settings/branches");
+  revalidatePath("/app/settings/branches");
   return { ok: true };
 }
 
@@ -176,8 +176,8 @@ export async function deactivateBranchAction(
     before: branch,
     after,
   });
-  revalidatePath("/settings/branches");
-  revalidatePath("/", "layout");
+  revalidatePath("/app/settings/branches");
+  revalidatePath("/app", "layout");
   return { ok: true };
 }
 
@@ -209,7 +209,7 @@ export async function reactivateBranchAction(input: unknown): Promise<Result> {
     before,
     after: { ...after, _meta: { event: "reactivated" } },
   });
-  revalidatePath("/settings/branches");
-  revalidatePath("/", "layout");
+  revalidatePath("/app/settings/branches");
+  revalidatePath("/app", "layout");
   return { ok: true };
 }

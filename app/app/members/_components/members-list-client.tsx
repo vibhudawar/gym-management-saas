@@ -86,7 +86,7 @@ export function MembersListClient({
                 Add member
               </Button>
               <Button asChild variant="outline">
-                <Link href="/members/import">Import from CSV</Link>
+                <Link href="/app/members/import">Import from CSV</Link>
               </Button>
               <MemberFormSheet
                 open={createOpen}

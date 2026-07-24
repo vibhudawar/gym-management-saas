@@ -52,7 +52,7 @@ export default async function MemberNotificationsPage({
   return (
     <div className="mx-auto w-full max-w-5xl">
       <Link
-        href={`/members/${id}`}
+        href={`/app/members/${id}`}
         className="text-muted-foreground hover:text-foreground mb-1 inline-flex items-center gap-1 text-xs"
       >
         <ArrowLeft className="size-3.5" />

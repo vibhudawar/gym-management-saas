@@ -88,7 +88,7 @@ export function MembersTable({
     params.set("sort", column);
     params.set("dir", nextDir);
     params.delete("page");
-    router.replace(`/members?${params.toString()}`);
+    router.replace(`/app/members?${params.toString()}`);
   }
 
   return (
@@ -134,7 +134,7 @@ export function MembersTable({
               status={status}
               density={density}
               onEdit={onEdit}
-              onClick={() => router.push(`/members/${row.id}`)}
+              onClick={() => router.push(`/app/members/${row.id}`)}
             />
           ))}
         </TableBody>

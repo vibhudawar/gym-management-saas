@@ -56,7 +56,7 @@ export function MembersPageActions({
       {canEdit ? (
         <>
           <Button asChild variant="ghost" size="sm">
-            <Link href="/members/import">
+            <Link href="/app/members/import">
               <Upload className="size-4" />
               Import CSV
             </Link>

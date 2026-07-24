@@ -36,23 +36,23 @@ type NavItem = {
 };
 
 const NAV_ITEMS: ReadonlyArray<NavItem> = [
-  { href: "/", label: "Today", icon: LayoutDashboard },
-  { href: "/members", label: "Members", icon: Users },
-  { href: "/plans", label: "Plans", icon: ListChecks },
-  { href: "/payments", label: "Payments", icon: CreditCard },
+  { href: "/app", label: "Today", icon: LayoutDashboard },
+  { href: "/app/members", label: "Members", icon: Users },
+  { href: "/app/plans", label: "Plans", icon: ListChecks },
+  { href: "/app/payments", label: "Payments", icon: CreditCard },
   {
-    href: "/reports",
+    href: "/app/reports",
     label: "Reports",
     icon: FileText,
     roles: ["owner", "branch_manager"],
   },
   {
-    href: "/audit-log",
+    href: "/app/audit-log",
     label: "Audit log",
     icon: History,
     roles: ["owner", "branch_manager"],
   },
-  { href: "/settings", label: "Settings", icon: Settings },
+  { href: "/app/settings", label: "Settings", icon: Settings },
 ];
 
 type AppSidebarProps = {
@@ -105,8 +105,8 @@ export function AppSidebar({
               {visibleItems.map((item) => {
                 const Icon = item.icon;
                 const isActive =
-                  item.href === "/"
-                    ? pathname === "/"
+                  item.href === "/app"
+                    ? pathname === "/app"
                     : pathname === item.href ||
                       pathname?.startsWith(`${item.href}/`);
                 return (

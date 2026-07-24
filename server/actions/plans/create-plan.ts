@@ -37,7 +37,7 @@ export async function createPlan(input: unknown): Promise<CreatePlanResult> {
       after: row,
     });
 
-    revalidatePath("/plans");
+    revalidatePath("/app/plans");
     return { ok: true, data: row };
   } catch (err) {
     if (isUniqueViolation(err)) {

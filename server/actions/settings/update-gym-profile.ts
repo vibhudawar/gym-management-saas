@@ -106,6 +106,6 @@ export async function updateGymProfile(input: unknown): Promise<Result> {
   // Note: gym name appears in the sidebar via `getCurrentSession`, which is
   // wrapped in React cache() per request — the sidebar picks up the new name
   // on the next nav without needing a layout-tree revalidate here.
-  revalidatePath("/settings/gym");
+  revalidatePath("/app/settings/gym");
   return { ok: true };
 }

@@ -23,6 +23,6 @@ export function detectMemberLoss(ctx: AnomalyContext): Anomaly | null {
     headline: "More members lapsing",
     subline: `${ctx.lapsedCount} members didn't renew (was ${ctx.priorLapsedCount} last period)`,
     actionLabel: "View lapsed members",
-    actionHref: "/members?membership=expired",
+    actionHref: "/app/members?membership=expired",
   };
 }

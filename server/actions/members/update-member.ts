@@ -155,8 +155,8 @@ export async function updateMember(
       after,
     });
 
-    revalidatePath("/members");
-    revalidatePath(`/members/${id}`);
+    revalidatePath("/app/members");
+    revalidatePath(`/app/members/${id}`);
     return { ok: true, data: after };
   } catch (err) {
     if (isUniqueViolation(err)) {

@@ -75,6 +75,6 @@ export async function updateNotificationChannel(
     },
   });
 
-  revalidatePath("/settings/notifications");
+  revalidatePath("/app/settings/notifications");
   return { ok: true };
 }

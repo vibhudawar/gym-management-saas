@@ -40,7 +40,7 @@ export function PaymentsFilters({ branches, showBranchFilter }: Props) {
     params.delete("page");
     const nextQuery = params.toString();
     if (nextQuery === searchParams.toString()) return;
-    router.replace(nextQuery ? `/payments?${nextQuery}` : "/payments");
+    router.replace(nextQuery ? `/app/payments?${nextQuery}` : "/app/payments");
   }
 
   return (

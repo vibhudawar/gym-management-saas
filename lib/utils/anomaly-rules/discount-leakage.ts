@@ -40,6 +40,6 @@ export function detectDiscountLeakage(ctx: AnomalyContext): Anomaly | null {
     headline: severity === "high" ? "Discount leakage high" : "Discount leakage rising",
     subline: `${formatMoneyShort(ctx.discountPaise)} given (${pctLabel} of gross).${staffNote}`,
     actionLabel: "View discount details",
-    actionHref: `/reports?${params.toString()}`,
+    actionHref: `/app/reports?${params.toString()}`,
   };
 }

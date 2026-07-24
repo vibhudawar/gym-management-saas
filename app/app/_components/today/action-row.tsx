@@ -38,7 +38,7 @@ export function ActionRow({ row, kind, gymName, asOf }: Props) {
   const router = useRouter();
 
   function handleRowClick() {
-    router.push(`/members/${row.memberId}`);
+    router.push(`/app/members/${row.memberId}`);
   }
 
   function stopPropagation(e: React.MouseEvent) {

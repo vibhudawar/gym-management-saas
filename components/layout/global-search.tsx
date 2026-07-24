@@ -43,7 +43,7 @@ export function GlobalSearchTrigger() {
   function navigate(id: string) {
     setOpen(false);
     setQuery("");
-    router.push(`/members/${id}`);
+    router.push(`/app/members/${id}`);
   }
 
   return (

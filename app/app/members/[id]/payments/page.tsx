@@ -41,7 +41,7 @@ export default async function MemberPaymentsPage({
     <div className="mx-auto w-full max-w-4xl">
       <div className="space-y-2 pb-4">
         <Link
-          href={`/members/${member.id}`}
+          href={`/app/members/${member.id}`}
           className="text-muted-foreground hover:text-foreground inline-flex items-center gap-1 text-xs"
         >
           <ArrowLeft className="size-3.5" />

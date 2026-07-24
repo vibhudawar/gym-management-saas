@@ -66,7 +66,7 @@ export async function updatePlan(
       after,
     });
 
-    revalidatePath("/plans");
+    revalidatePath("/app/plans");
     return { ok: true, data: after };
   } catch (err) {
     if (isUniqueViolation(err)) {

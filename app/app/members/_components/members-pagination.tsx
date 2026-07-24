@@ -22,7 +22,7 @@ export function MembersPagination({ page, pageSize, total }: MembersPaginationPr
     const params = new URLSearchParams(searchParams.toString());
     if (nextPage <= 1) params.delete("page");
     else params.set("page", String(nextPage));
-    router.push(`/members?${params.toString()}`);
+    router.push(`/app/members?${params.toString()}`);
   }
 
   return (

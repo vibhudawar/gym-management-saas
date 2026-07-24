@@ -30,6 +30,6 @@ export function detectSlowWeek(ctx: AnomalyContext): Anomaly | null {
     headline: "Slow week detected",
     subline: `${formatRangeLabel({ from: slowest.weekStart, to: slowest.weekEnd })}: ${formatMoneyShort(slowest.netPaise)} (avg week: ${formatMoneyShort(Math.round(avg))})`,
     actionLabel: "View revenue chart",
-    actionHref: `/reports?tab=revenue&from=${ctx.range.from}&to=${ctx.range.to}`,
+    actionHref: `/app/reports?tab=revenue&from=${ctx.range.from}&to=${ctx.range.to}`,
   };
 }

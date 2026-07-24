@@ -20,7 +20,7 @@ export async function MemberActivityCard({ memberId }: { memberId: string }) {
         </h2>
         {entries.length > 0 ? (
           <Link
-            href={`/audit-log?entity_type=member&entity_id=${memberId}`}
+            href={`/app/audit-log?entity_type=member&entity_id=${memberId}`}
             className="text-primary inline-flex items-center gap-1 text-xs hover:underline"
           >
             View full history

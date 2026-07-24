@@ -34,9 +34,9 @@ export async function enrollNewMember(input: unknown): Promise<EnrollmentResult>
   const session = await requireUser();
   const result = await enroll(session, parsed.data);
   if (result.ok) {
-    revalidatePath("/members");
-    revalidatePath(`/members/${parsed.data.memberId}`);
-    revalidatePath("/payments");
+    revalidatePath("/app/members");
+    revalidatePath(`/app/members/${parsed.data.memberId}`);
+    revalidatePath("/app/payments");
   }
   return result;
 }

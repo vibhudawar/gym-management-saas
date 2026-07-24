@@ -73,7 +73,7 @@ export function EnrolledToday({
                 <li key={row.membershipId}>
                   <button
                     type="button"
-                    onClick={() => router.push(`/members/${row.memberId}`)}
+                    onClick={() => router.push(`/app/members/${row.memberId}`)}
                     className={cn(
                       "border-border hover:bg-muted/40 grid w-full grid-cols-[1fr_1fr_auto_auto] items-center gap-4 border-b px-5 py-3 text-left text-sm transition-colors last:border-0",
                       isOwn && "bg-blue-50/40 dark:bg-blue-500/5",
@@ -129,7 +129,7 @@ export function EnrolledToday({
           {hasOverflow ? (
             <div className="border-border border-t px-5 py-3">
               <Link
-                href={`/members?joinedFrom=${todayIstIso}`}
+                href={`/app/members?joinedFrom=${todayIstIso}`}
                 className="text-primary inline-flex items-center gap-1 text-xs hover:underline"
               >
                 Show all {total.toLocaleString("en-IN")} today

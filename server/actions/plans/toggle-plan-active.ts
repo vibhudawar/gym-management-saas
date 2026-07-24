@@ -62,6 +62,6 @@ export async function togglePlanActive(
     after,
   });
 
-  revalidatePath("/plans");
+  revalidatePath("/app/plans");
   return { ok: true, data: after };
 }

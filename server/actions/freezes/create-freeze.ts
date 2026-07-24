@@ -30,10 +30,10 @@ export async function createFreezeAction(
   const session = await requireRole("owner", "branch_manager");
   const result = await createFreezeService(session, parsed.data);
   if (result.ok) {
-    revalidatePath("/");
-    revalidatePath("/members");
+    revalidatePath("/app");
+    revalidatePath("/app/members");
     if (parsed.data.memberId) {
-      revalidatePath(`/members/${parsed.data.memberId}`);
+      revalidatePath(`/app/members/${parsed.data.memberId}`);
     }
   }
   return result;

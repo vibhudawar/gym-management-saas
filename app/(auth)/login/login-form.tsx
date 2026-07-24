@@ -44,7 +44,7 @@ export function LoginForm() {
         setError(result.error);
         return;
       }
-      router.replace("/");
+      router.replace("/app");
       router.refresh();
     });
   }

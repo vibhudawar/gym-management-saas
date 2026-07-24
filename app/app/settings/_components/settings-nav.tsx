@@ -28,23 +28,23 @@ type Section = {
 };
 
 const SECTIONS: Section[] = [
-  { href: "/settings/gym", label: "Gym profile", icon: Building2, roles: ["owner"] },
-  { href: "/settings/branches", label: "Branches", icon: Users, roles: ["owner"] },
+  { href: "/app/settings/gym", label: "Gym profile", icon: Building2, roles: ["owner"] },
+  { href: "/app/settings/branches", label: "Branches", icon: Users, roles: ["owner"] },
   {
-    href: "/settings/notifications",
+    href: "/app/settings/notifications",
     label: "Notifications",
     icon: Bell,
     roles: ["owner"],
   },
   {
-    href: "/settings/subscription",
+    href: "/app/settings/subscription",
     label: "Subscription",
     icon: CreditCard,
     roles: ["owner"],
   },
-  { href: "/settings/account", label: "Account", icon: User },
+  { href: "/app/settings/account", label: "Account", icon: User },
   {
-    href: "/settings/export",
+    href: "/app/settings/export",
     label: "Data export",
     icon: Download,
     roles: ["owner"],

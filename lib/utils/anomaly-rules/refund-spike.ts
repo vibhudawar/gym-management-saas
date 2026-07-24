@@ -35,6 +35,6 @@ export function detectRefundSpike(ctx: AnomalyContext): Anomaly | null {
       ctx.refundCount === 1 ? "refund" : "refunds"
     } — ${ratioRounded}× more than last period`,
     actionLabel: "View payments",
-    actionHref: `/payments?${params.toString()}`,
+    actionHref: `/app/payments?${params.toString()}`,
   };
 }

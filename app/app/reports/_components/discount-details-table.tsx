@@ -67,7 +67,7 @@ export function DiscountDetailsTable({ rows, capped }: Props) {
                   </TableCell>
                   <TableCell className="text-sm">
                     <Link
-                      href={`/members/${r.memberId}`}
+                      href={`/app/members/${r.memberId}`}
                       className="text-primary hover:underline"
                     >
                       {r.memberName}

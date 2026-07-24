@@ -78,7 +78,7 @@ export default async function PaymentsPage({
         description={`${result.total.toLocaleString("en-IN")} entries · Net ${formatMoney(result.netPaise)}`}
         actions={
           <Button asChild variant="ghost" size="sm">
-            <Link href="/payments?from=&to=">Clear filters</Link>
+            <Link href="/app/payments?from=&to=">Clear filters</Link>
           </Button>
         }
       />

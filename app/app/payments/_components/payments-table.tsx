@@ -61,7 +61,7 @@ export function PaymentsTable({ rows, showBranch, showReceivedBy }: Props) {
                 </TableCell>
                 <TableCell>
                   <Link
-                    href={`/members/${p.memberId}`}
+                    href={`/app/members/${p.memberId}`}
                     className="text-foreground hover:text-primary text-sm font-medium hover:underline"
                   >
                     {p.memberName}
