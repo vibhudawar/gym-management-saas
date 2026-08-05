@@ -31,7 +31,8 @@ export async function proxy(request: NextRequest) {
 
 export const config = {
  matcher: [
-  // Skip static assets and Next internals
-  "/((?!_next/static|_next/image|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)",
+  // Skip static assets, Next internals, and route handlers. `/api/*` carries
+  // its own auth. Server Actions post to their own page, so they still match.
+  "/((?!api|_next/static|_next/image|favicon.ico|robots.txt|sitemap.xml|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)",
  ],
 };
