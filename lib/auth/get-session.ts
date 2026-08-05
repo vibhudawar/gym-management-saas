@@ -1,4 +1,5 @@
-import { and, eq, isNull } from "drizzle-orm";
+import { and, eq, isNull, sql } from "drizzle-orm";
+import { alias } from "drizzle-orm/pg-core";
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 import { cache } from "react";
@@ -10,6 +11,9 @@ import { createSupabaseServerClient } from "./supabase-server";
 import { ALL_ROLES, type Role } from "./roles";
 
 export const ACTIVE_BRANCH_COOKIE = "active_branch_id";
+
+const UUID_RE =
+  /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
 export type SessionContext = {
   authUserId: string;
@@ -52,11 +56,31 @@ export const getCurrentSession = cache(async (): Promise<SessionContext | null> 
   const authUserId = claims.sub;
   if (!authUserId) return null;
 
+  // Read up front so the active branch resolves in the same round-trip.
+  const cookieStore = await cookies();
+  const rawBranchId = cookieStore.get(ACTIVE_BRANCH_COOKIE)?.value;
+  // A non-uuid value would fail the whole query with a 22P02 syntax error.
+  const cookieBranchId = rawBranchId && UUID_RE.test(rawBranchId) ? rawBranchId : null;
+
+  const activeBranches = alias(branches, "active_branches");
+
   const row = await db
-    .select({ user: users, gym: gyms, branch: branches })
+    .select({ user: users, gym: gyms, branch: branches, activeBranch: activeBranches })
     .from(users)
     .innerJoin(gyms, eq(gyms.id, users.gymId))
     .leftJoin(branches, eq(branches.id, users.branchId))
+    .leftJoin(
+      activeBranches,
+      cookieBranchId
+        ? and(
+            eq(activeBranches.id, cookieBranchId),
+            // The cookie outlives a session — never resolve another gym's branch.
+            eq(activeBranches.gymId, users.gymId),
+            eq(activeBranches.isActive, true),
+            isNull(activeBranches.deletedAt),
+          )
+        : sql`false`,
+    )
     .where(
       and(
         eq(users.authUserId, authUserId),
@@ -70,28 +94,9 @@ export const getCurrentSession = cache(async (): Promise<SessionContext | null> 
   if (row.length === 0) return null;
   const { user, gym, branch } = row[0];
 
-  let activeBranch: Branch | null = branch ?? null;
-  if (user.role === "owner") {
-    const cookieStore = await cookies();
-    const cookieBranchId = cookieStore.get(ACTIVE_BRANCH_COOKIE)?.value;
-    if (cookieBranchId) {
-      const found = await db
-        .select()
-        .from(branches)
-        .where(
-          and(
-            eq(branches.id, cookieBranchId),
-            eq(branches.gymId, gym.id),
-            eq(branches.isActive, true),
-            isNull(branches.deletedAt),
-          ),
-        )
-        .limit(1);
-      activeBranch = found[0] ?? null;
-    } else {
-      activeBranch = null;
-    }
-  }
+  // Owners follow the cookie (null = all branches); everyone else their assignment.
+  const activeBranch: Branch | null =
+    user.role === "owner" ? (row[0].activeBranch ?? null) : (branch ?? null);
 
   return {
     authUserId,

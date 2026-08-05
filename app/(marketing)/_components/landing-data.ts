@@ -160,7 +160,7 @@ export type PricingTier = {
 export const PRICING: ReadonlyArray<PricingTier> = [
   {
     name: "Basic",
-    price: "₹1,500–2,500",
+    price: "₹3,500",
     cadence: "/month",
     tagline: "Everything to run the front desk.",
     featured: false,
@@ -174,7 +174,7 @@ export const PRICING: ReadonlyArray<PricingTier> = [
   },
   {
     name: "Pro",
-    price: "₹5,000+",
+    price: "₹7,500",
     cadence: "/month",
     tagline: "Automate reminders and win-back.",
     featured: true,
