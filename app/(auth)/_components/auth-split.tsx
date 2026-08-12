@@ -1,5 +1,5 @@
+import Image from "next/image";
 import Link from "next/link";
-import { Dumbbell } from "lucide-react";
 
 type Props = {
   children: React.ReactNode;
@@ -29,10 +29,15 @@ export function AuthSplit({ children, footer }: Props) {
                   href="/"
                   className="inline-flex items-center gap-2 text-sm font-medium tracking-tight"
                 >
-                  <span className="bg-white/15 ring-1 ring-white/30 inline-flex size-8 items-center justify-center rounded-md">
-                    <Dumbbell className="size-4" />
-                  </span>
-                  Gym Management
+                  <Image
+                    src="/gym-os-logo.png"
+                    alt="GymOS"
+                    width={32}
+                    height={32}
+                    priority
+                    className="size-8 rounded-md ring-1 ring-white/30"
+                  />
+                  GymOS
                 </Link>
                 <div className="mt-auto space-y-3">
                   <p className="text-balance text-2xl font-semibold leading-[1.2] tracking-tight">

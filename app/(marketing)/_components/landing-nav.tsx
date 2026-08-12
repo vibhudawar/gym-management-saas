@@ -1,6 +1,7 @@
 "use client";
 
-import { Dumbbell, Menu, X } from "lucide-react";
+import { Menu, X } from "lucide-react";
+import Image from "next/image";
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
@@ -29,9 +30,14 @@ export function LandingNav() {
     >
       <nav className="mx-auto flex h-16 w-full max-w-6xl items-center justify-between px-6">
         <Link href="/" className="flex items-center gap-2">
-          <span className="flex size-8 items-center justify-center rounded-lg bg-primary text-primary-foreground">
-            <Dumbbell className="size-4" />
-          </span>
+          <Image
+            src="/gym-os-logo.png"
+            alt="GymOS"
+            width={32}
+            height={32}
+            priority
+            className="size-8 rounded-lg"
+          />
           <span className="text-base font-semibold tracking-tight">GymOS</span>
         </Link>
 

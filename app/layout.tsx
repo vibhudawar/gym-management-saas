@@ -18,6 +18,7 @@ const geistMono = Geist_Mono({
 export const metadata: Metadata = {
  title: { default: "GymOS", template: "%s · GymOS" },
  description: "Gym management software for the Indian market.",
+ manifest: "/site.webmanifest",
 };
 
 export default function RootLayout({

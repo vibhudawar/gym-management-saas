@@ -1,4 +1,4 @@
-import { Dumbbell } from "lucide-react";
+import Image from "next/image";
 import Link from "next/link";
 import { CONTACT, demoMailto, demoWhatsapp, NAV_LINKS } from "./landing-data";
 
@@ -9,9 +9,13 @@ export function LandingFooter() {
         <div className="flex flex-col gap-8 sm:flex-row sm:items-start sm:justify-between">
           <div className="max-w-xs">
             <div className="flex items-center gap-2">
-              <span className="flex size-8 items-center justify-center rounded-lg bg-primary text-primary-foreground">
-                <Dumbbell className="size-4" />
-              </span>
+              <Image
+                src="/gym-os-logo.png"
+                alt="GymOS"
+                width={32}
+                height={32}
+                className="size-8 rounded-lg"
+              />
               <span className="text-base font-semibold tracking-tight">
                 GymOS
               </span>
